@@ -1,5 +1,5 @@
 [package]
-name = "test_scene"
+name = "trenchbroom_scene"
 description = "TODO"
 publish = false
 version = { workspace = true }
@@ -15,7 +15,8 @@ readme = { workspace = true }
 bevy = { workspace = true, default-features = true, features = ["bevy_remote"] }
 serde = { workspace = true }
 avian3d = { workspace = true }
-avian_navmesh = { version = "0.1.0", path = "../navmesh" }
+avian_navmesh = { version = "0.1.0", path = "../../crates/navmesh" }
+bevy_trenchbroom = { workspace = true }
 
 [lints]
 workspace = true
