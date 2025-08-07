@@ -71,6 +71,7 @@ libm = ["rerecast/libm", "bevy_math/libm", "glam/libm"]
 # Use std if available, but fall back to libm if not
 nostd-libm = ["rerecast/nostd-libm", "bevy_math/nostd-libm", "glam/nostd-libm"]
 debug_plugin = [
+    "bevy_asset",
     "dep:bevy_gizmos",
     "dep:bevy_color",
     "dep:bevy_render",
