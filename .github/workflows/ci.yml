@@ -104,6 +104,21 @@ jobs:
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev
       - name: Install editor
         run: cargo install bevy_rerecast_editor --locked --path crates/bevy_rerecast_editor
+  cargo-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "true"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Populate target directory from cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Run cargo publish dry run
+        run: cargo publish --dry-run
   check-compiles-no-std:
     runs-on: ubuntu-latest
     strategy:
