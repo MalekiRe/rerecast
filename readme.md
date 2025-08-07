@@ -2,7 +2,7 @@
 [![crates.io](https://img.shields.io/crates/v/rerecast)](https://crates.io/crates/rerecast)
 [![docs.rs](https://docs.rs/rerecast/badge.svg)](https://docs.rs/rerecast)
 
-![`rerecast` logo](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/logo.svg)
+![`rerecast` logo](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/media/logo.svg)
 
 Rust port of [Recast](https://github.com/recastnavigation/recastnavigation), the industry-standard navigation mesh generator used
 by Unreal, Unity, Godot, and other game engines.
@@ -17,7 +17,7 @@ Rerecast brings navmeshes in two flavors:
 
 A typical detail mesh looks like this:
 
-![detail mesh](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/assets/editor.png)
+![detail mesh](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/assets/media/editor.png)
 
 As you can see, it does not perfectly follow terrain, but is a very good approximation for pathfinding.
 
@@ -97,6 +97,8 @@ If you need to regenerate a navmesh because the environment has changed, use [`N
 Take a look at the [`examples`](https://github.com/janhohenheim/rerecast/tree/main/examples/examples) directory to see all of this in action!
 
 ### Editor
+
+![editor demo](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/assets/media/demo.mp4)
 
 Tweaking navmesh settings by hand and restarting the game to see the changes is a very inefficient way to iterate on your game.
 Instead, navmeshes are often authored in advanced. To do this, the Bevy integration comes with an editor to help you out.
@@ -180,6 +182,8 @@ Take a look at their repos for documentation on how to use them with rerecast.
   - [x] Watershed
   - [ ] Monotone
   - [ ] Layer
+- [x] `no_std` support
+- [x] cross-platform determinism (use `libm` feature)
 
 ### Bevy Integration
 
@@ -195,6 +199,9 @@ Take a look at their repos for documentation on how to use them with rerecast.
   - [x] Generate navmeshes on demand
   - [x] Fully regenerate navmeshes
   - [ ] Partially regenerate navmeshes
+  - [ ] `no_std` support for `bevy_rerecast_core`
+    - Technically available, but of limited use until `bevy_asset` supports `no_std`
+  - [x] cross-platform determinism (use `libm` feature)
 
 ## Compatibility
 

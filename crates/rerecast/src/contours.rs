@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use glam::{U16Vec3, Vec3Swizzles};
@@ -116,10 +118,12 @@ impl CompactHeightfield {
                         if contour_count >= max_contours as usize {
                             // Allocate more contours.
                             // This happens when a region has holes.
+                            #[cfg(feature = "tracing")]
                             let old_max = max_contours;
                             max_contours *= 2;
                             cset.contours.truncate(max_contours as usize);
 
+                            #[cfg(feature = "tracing")]
                             tracing::warn!(
                                 "Region has holes. Expanding contour set from max {old_max} to max {max_contours}"
                             );
@@ -384,8 +388,8 @@ fn simplify_contour(
             cinc = points.len() - 1;
             ci = (bi as usize + cinc) % points.len();
             endi = ai as usize;
-            std::mem::swap(&mut a.x, &mut b.x);
-            std::mem::swap(&mut a.z, &mut b.z);
+            core::mem::swap(&mut a.x, &mut b.x);
+            core::mem::swap(&mut a.z, &mut b.z);
         }
         // Tessellate only outer edges or edges between areas.
         let region = points[ci].1;

@@ -11,8 +11,9 @@ categories = { workspace = true }
 readme = { workspace = true }
 
 [features]
-default = []
+default = ["debug_plugin"]
 
+libm = ["bevy_math/libm", "bevy_rerecast_core/libm"]
 debug_plugin = ["bevy_rerecast_core/debug_plugin"]
 pbr_transmission_textures = ["bevy_pbr/pbr_transmission_textures"]
 pbr_specular_textures = ["bevy_pbr/pbr_specular_textures"]
@@ -43,18 +44,19 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 flate2 = { workspace = true }
 
-rerecast = { workspace = true, features = ["serialize"] }
-bevy_rerecast_core = { workspace = true }
+rerecast = { workspace = true, features = ["serialize", "std"] }
+bevy_rerecast_core = { workspace = true, features = ["std"] }
 
 # Editor integration
 serde = { workspace = true }
 serde_json = { workspace = true }
 bincode = { workspace = true }
-base64 = { workspace = true }
+base64 = { workspace = true, features = ["std"] }
 wgpu-types = { workspace = true, features = ["serde"] }
 
 [lints]
 workspace = true
 
 [package.metadata.docs.rs]
+rustdoc-args = ["-Zunstable-options", "--generate-link-to-definition"]
 all-features = true
