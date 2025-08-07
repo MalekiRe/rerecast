@@ -1,6 +1,6 @@
 [package]
 name = "rerecast_examples"
-description = "TODO"
+description = "Examples for rerecast"
 publish = false
 version = { workspace = true }
 authors = { workspace = true }

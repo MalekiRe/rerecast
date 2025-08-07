@@ -1,6 +1,6 @@
 [package]
 name = "avian_rerecast"
-description = "TODO"
+description = "Avian backend for bevy_rerecast"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }

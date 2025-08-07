@@ -1,6 +1,6 @@
 [package]
 name = "bevy_rerecast"
-description = "TODO"
+description = "Bevy integration for rerecast"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }

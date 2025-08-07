@@ -1,6 +1,6 @@
 [package]
 name = "bevy_rerecast_editor_integration"
-description = "TODO"
+description = "Editor integration for bevy_rerecast_core"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
