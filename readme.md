@@ -101,7 +101,7 @@ Take a look at the [`examples`](https://github.com/janhohenheim/rerecast/tree/ma
 ![editor demo](https://github.com/janhohenheim/rerecast/raw/refs/heads/main/media/demo.mp4)
 
 
-https://github.com/user-attachments/assets/f1c62fbe-cd76-4dc7-9c88-574e241e0a6d
+<https://github.com/user-attachments/assets/f1c62fbe-cd76-4dc7-9c88-574e241e0a6d>
 
 
 Tweaking navmesh settings by hand and restarting the game to see the changes is a very inefficient way to iterate on your game.
