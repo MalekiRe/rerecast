@@ -17,7 +17,7 @@ Rerecast brings navmeshes in two flavors:
 
 A typical detail mesh looks like this:
 
-![detail mesh](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/assets/media/editor.png)
+![detail mesh](https://github.com/janhohenheim/rerecast/blob/main/media/editor.png?raw=true)
 
 As you can see, it does not perfectly follow terrain, but is a very good approximation for pathfinding.
 
@@ -98,7 +98,7 @@ Take a look at the [`examples`](https://github.com/janhohenheim/rerecast/tree/ma
 
 ### Editor
 
-![editor demo](https://raw.githubusercontent.com/janhohenheim/rerecast/refs/heads/main/assets/media/demo.mp4)
+![editor demo](https://github.com/janhohenheim/rerecast/raw/refs/heads/main/media/demo.mp4)
 
 Tweaking navmesh settings by hand and restarting the game to see the changes is a very inefficient way to iterate on your game.
 Instead, navmeshes are often authored in advanced. To do this, the Bevy integration comes with an editor to help you out.
