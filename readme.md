@@ -100,6 +100,10 @@ Take a look at the [`examples`](https://github.com/janhohenheim/rerecast/tree/ma
 
 ![editor demo](https://github.com/janhohenheim/rerecast/raw/refs/heads/main/media/demo.mp4)
 
+
+https://github.com/user-attachments/assets/f1c62fbe-cd76-4dc7-9c88-574e241e0a6d
+
+
 Tweaking navmesh settings by hand and restarting the game to see the changes is a very inefficient way to iterate on your game.
 Instead, navmeshes are often authored in advanced. To do this, the Bevy integration comes with an editor to help you out.
 To use it, you must enable Bevy's BRP functionality, which is a way for Bevy processes to communicate over HTTP. To do this, enable Bevy's `remote` feature and add the [`RemotePlugin`] and [`RemoteHttpPlugin`] to your app:
