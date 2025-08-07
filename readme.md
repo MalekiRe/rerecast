@@ -7,7 +7,7 @@
 Rust port of [Recast](https://github.com/recastnavigation/recastnavigation), the industry-standard navigation mesh generator used
 by Unreal, Unity, Godot, and other game engines.
 
-## What's a Navmesh?!
+## What's a Navmesh?
 
 A navmesh is a mesh that says where in the level a character can walk. This information is typically used for pathfinding.
 Rerecast brings navmeshes in two flavors:
