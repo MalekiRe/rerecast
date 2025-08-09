@@ -230,14 +230,14 @@ plugin_group! {
     /// - [`NavmeshDebugPlugin`]: Adds visual debugging functionality for navmeshes.
     ///   Requires the `debug_plugin` feature.
     ///
-    /// Note that rerecast does not do anything until you also add a navmesh affector backend.
-    /// A navmesh affector is something that represents non-walkable geometry in form of a [`TriMesh`](rerecast::TriMesh).
+    /// Note that rerecast does not do anything until you also add a navmesh backend.
     ///
-    /// A backend's job is to provide the [`TriMesh`](rerecast::TriMesh)es that will be used to create the navmesh.
+    /// A backend's job is to provide the [`TriMesh`](rerecast::TriMesh)es that will be used to create the navmesh. Said navmesh
+    /// contains all non-walkable geometry, which is collectively called the *obstacles*.
     /// For example, if you enable the `bevy_mesh` feature, you can add the [`Mesh3dNavmeshPlugin`] to your app to
     /// set a backend that generates navmeshes from entities with a `Mesh3d` component.
     ///
-    /// To set your own backend, use [`NavmeshApp::set_navmesh_affector_backend`].
+    /// To set your own backend, use [`NavmeshApp::set_navmesh_backend`].
     /// Only one backend can be set at a time. Setting a new backend will replace the previous one.
     /// By default, no backend is set.
     #[derive(Debug, Default)]
