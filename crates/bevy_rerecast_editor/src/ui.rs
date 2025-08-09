@@ -14,6 +14,7 @@ use rfd::AsyncFileDialog;
 use crate::{
     backend::{BuildNavmesh, GlobalNavmeshSettings},
     get_navmesh_input::GetNavmeshInput,
+    load::LoadTask,
     save::SaveTask,
     theme::{
         palette::BEVY_GRAY,
@@ -59,6 +60,7 @@ fn spawn_ui(mut commands: Commands) {
                     button("Load Scene", spawn_load_scene_modal),
                     button("Build Navmesh", build_navmesh),
                     button("Save", save_navmesh),
+                    button("Load Navmesh", load_navmesh),
                 ]
             ),
             (
@@ -205,6 +207,32 @@ fn save_navmesh(
         .save_file();
     let task = thread_pool.spawn(future);
     commands.insert_resource(SaveTask(task));
+}
+
+fn load_navmesh(
+    _: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    maybe_task: Option<Res<LoadTask>>,
+    window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
+) {
+    if maybe_task.is_some() {
+        // Already saving, do nothing
+        return;
+    }
+
+    // Safety: we're on the main thread, so this is fine??? I think??
+    let window_handle = unsafe { window_handle.get_handle() };
+    let thread_pool = AsyncComputeTaskPool::get();
+    let future = AsyncFileDialog::new()
+        .add_filter("Navmesh", &["nav"])
+        .add_filter("All files", &["*"])
+        .set_title("Load Navmesh")
+        .set_file_name("navmesh.nav")
+        .set_parent(&window_handle)
+        .set_can_create_directories(false)
+        .pick_file();
+    let task = thread_pool.spawn(future);
+    commands.insert_resource(LoadTask(task));
 }
 
 fn spawn_load_scene_modal(_: Trigger<Pointer<Click>>, mut commands: Commands) {

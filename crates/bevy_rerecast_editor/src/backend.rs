@@ -7,6 +7,10 @@ use bevy_rerecast::{
 
 pub(super) fn plugin(app: &mut App) {
     app.set_navmesh_affector_backend(editor_backend);
+    app.add_systems(
+        Update,
+        insert_gizmos.run_if(resource_exists_and_changed::<NavmeshHandle>),
+    );
     app.add_observer(build_navmesh);
     app.init_resource::<GlobalNavmeshSettings>()
         .init_resource::<NavmeshHandle>();
@@ -41,7 +45,10 @@ fn build_navmesh(
     mut navmesh_generator: NavmeshGenerator,
 ) {
     let handle = navmesh_generator.generate(config.0.clone());
-    commands.spawn(PolygonNavmeshGizmo(handle.id()));
-    commands.spawn(DetailNavmeshGizmo(handle.id()));
     commands.insert_resource(NavmeshHandle(handle));
+}
+
+fn insert_gizmos(mut commands: Commands, navmesh: Res<NavmeshHandle>) {
+    commands.spawn(PolygonNavmeshGizmo(navmesh.id()));
+    commands.spawn(DetailNavmeshGizmo(navmesh.id()));
 }

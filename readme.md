@@ -197,7 +197,7 @@ Take a look at their repos for documentation on how to use them with rerecast.
   - [ ] Advanced config
   - [x] Visualize navmesh
   - [x] Save navmesh
-  - [ ] Load navmesh config
+  - [x] Load navmeshes with their config
 - API
   - [x] Optional editor communication
   - [x] Generate navmeshes on demand

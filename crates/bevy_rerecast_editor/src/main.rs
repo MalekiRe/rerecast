@@ -12,6 +12,7 @@ extern crate alloc;
 mod backend;
 mod camera;
 mod get_navmesh_input;
+mod load;
 mod save;
 mod theme;
 mod ui;
@@ -33,6 +34,7 @@ fn main() -> AppExit {
             visualization::plugin,
             backend::plugin,
             save::plugin,
+            load::plugin,
         ))
         .run()
 }
