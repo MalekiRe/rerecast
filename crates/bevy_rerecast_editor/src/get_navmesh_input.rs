@@ -187,7 +187,8 @@ fn poll_navmesh_input(
                 .iter()
                 .flat_map(|indices| indices.to_array())
                 .collect(),
-        ));
+        ))
+        .with_computed_normals();
 
     commands.spawn((
         Transform::default(),
@@ -198,7 +199,7 @@ fn poll_navmesh_input(
             handle: gizmos.add(GizmoAsset::new()),
             line_config: GizmoLineConfig {
                 perspective: true,
-                width: 20.0,
+                width: 15.0,
                 joints: GizmoLineJoint::Bevel,
                 ..default()
             },

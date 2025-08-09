@@ -253,6 +253,7 @@ fn update_dirty_polygon_gizmos(
         }
         visual_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, visual_verts);
         visual_mesh.insert_indices(Indices::U32(visual_indices));
+        visual_mesh.compute_normals();
 
         commands
             .entity(entity)
@@ -339,6 +340,7 @@ fn update_dirty_detail_gizmos(
         }
         visual_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, visual_verts);
         visual_mesh.insert_indices(Indices::U32(visual_indices));
+        visual_mesh.compute_normals();
 
         commands
             .entity(entity)
@@ -400,20 +402,20 @@ impl FromWorld for GizmoHandles {
         Self {
             polygon_material: world.resource_mut::<Assets<StandardMaterial>>().add(
                 StandardMaterial {
-                    base_color: tailwind::BLUE_600.with_alpha(0.7).into(),
+                    base_color: tailwind::BLUE_600.with_alpha(0.2).into(),
                     unlit: true,
                     double_sided: true,
-                    alpha_mode: AlphaMode::AlphaToCoverage,
+                    alpha_mode: AlphaMode::Blend,
                     depth_bias: -0.001,
                     ..Default::default()
                 },
             ),
             detail_material: world.resource_mut::<Assets<StandardMaterial>>().add(
                 StandardMaterial {
-                    base_color: tailwind::EMERALD_200.with_alpha(0.7).into(),
+                    base_color: tailwind::EMERALD_200.with_alpha(0.2).into(),
                     unlit: true,
                     double_sided: true,
-                    alpha_mode: AlphaMode::AlphaToCoverage,
+                    alpha_mode: AlphaMode::Blend,
                     depth_bias: -0.001,
                     ..Default::default()
                 },
@@ -438,21 +440,21 @@ impl Default for NavmeshGizmoConfig {
             polygon_navmesh: GizmoConfig {
                 enabled: false,
                 line: GizmoLineConfig {
-                    perspective: false,
-                    width: 1.3,
+                    perspective: true,
+                    width: 6.0,
                     ..Default::default()
                 },
-                depth_bias: -0.001,
+                depth_bias: -0.002,
                 ..Default::default()
             },
             detail_navmesh: GizmoConfig {
                 enabled: true,
                 line: GizmoLineConfig {
-                    perspective: false,
-                    width: 1.3,
+                    perspective: true,
+                    width: 6.0,
                     ..Default::default()
                 },
-                depth_bias: -0.001,
+                depth_bias: -0.002,
                 ..Default::default()
             },
         }
