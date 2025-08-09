@@ -101,6 +101,8 @@ pub struct PolygonNavmesh {
     /// Polygons. [Length: [Self::polygon_count]].
     ///
     /// Each entry is [`Self::max_vertices_per_polygon`] in length.
+    /// The polygons are in counter-clockwise order on the XZ plane. They are guaranteed to be convex. They are not guaranteed to be planar.
+    ///
     /// The first instance of [`Self::NO_INDEX`] indicates the end of the indices for the entry.
     ///
     /// For example:
