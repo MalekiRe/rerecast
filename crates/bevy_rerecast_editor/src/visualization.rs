@@ -3,8 +3,6 @@ use std::collections::HashSet;
 use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_rerecast::{TriMeshFromBevyMesh as _, debug::NavmeshGizmoConfig, rerecast::TriMesh};
 
-use crate::backend::NavmeshAffector;
-
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<GizmosToDraw>();
     app.add_systems(
@@ -75,7 +73,7 @@ fn draw_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
 
 fn draw_navmesh_affector(
     mut gizmos: ResMut<Assets<GizmoAsset>>,
-    affector: Query<(&Mesh3d, &Gizmo), With<NavmeshAffector>>,
+    affector: Query<(&Mesh3d, &Gizmo), With<AffectorGizmo>>,
     meshes: Res<Assets<Mesh>>,
 ) {
     for (mesh, gizmo) in &affector {
@@ -111,7 +109,7 @@ fn draw_visual(mut visibility: Query<&mut Visibility, With<VisualMesh>>) {
 }
 
 fn hide_affector(
-    gizmo_handles: Query<&Gizmo, With<NavmeshAffector>>,
+    gizmo_handles: Query<&Gizmo, With<AffectorGizmo>>,
     mut gizmos: ResMut<Assets<GizmoAsset>>,
 ) {
     for gizmo in &gizmo_handles {
@@ -139,3 +137,6 @@ fn hide_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
 
 #[derive(Component)]
 pub(crate) struct VisualMesh;
+
+#[derive(Component)]
+pub(crate) struct AffectorGizmo;

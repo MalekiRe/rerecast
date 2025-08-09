@@ -79,7 +79,14 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
         });
     };
     let affectors = match world.run_system_with(*backend_id, params.backend_input) {
-        Ok(result) => result,
+        Ok(Some(result)) => result,
+        Ok(None) => {
+            return Err(BrpError {
+                code: bevy_remote::error_codes::INTERNAL_ERROR,
+                message: format!("Navmesh affector backend failed: Returned no trimesh"),
+                data: None,
+            });
+        }
         Err(err) => {
             return Err(BrpError {
                 code: bevy_remote::error_codes::INTERNAL_ERROR,
@@ -88,10 +95,6 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
             });
         }
     };
-    let affectors = affectors
-        .into_iter()
-        .map(|(transform, mesh)| AffectorMesh { transform, mesh })
-        .collect();
 
     let mut visuals = world.query_filtered::<(
         &GlobalTransform,
@@ -180,7 +183,7 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
         })
         .collect::<Vec<_>>();
     let response = PollEditorInputResponse {
-        affector_meshes: affectors,
+        affectors,
         visual_meshes: visuals,
         materials: serialized_materials,
         meshes: serialized_meshes,
@@ -297,8 +300,8 @@ pub struct EditorInputTaskId(pub String);
 /// Data for the editor. Provided in [`PollEditorInputResponse`].
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct PollEditorInputResponse {
-    /// The meshes that affect the navmesh.
-    pub affector_meshes: Vec<AffectorMesh>,
+    /// The a trimesh containing all navmesh affectors.
+    pub affectors: TriMesh,
     /// Additional meshes that don't affect the navmesh, but are sent to the editor for visualization.
     pub visual_meshes: Vec<VisualMesh>,
     /// Materials indexed by [`Self::visual_meshes`].
@@ -307,15 +310,6 @@ pub struct PollEditorInputResponse {
     pub meshes: Vec<SerializedMesh>,
     /// Images indexed by [`Self::materials`].
     pub images: Vec<SerializedImage>,
-}
-
-/// A mesh that affects the navmesh.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AffectorMesh {
-    /// The transform of the mesh.
-    pub transform: GlobalTransform,
-    /// The mesh data.
-    pub mesh: TriMesh,
 }
 
 /// A mesh that doesn't affect the navmesh, but is sent to the editor for visualization.

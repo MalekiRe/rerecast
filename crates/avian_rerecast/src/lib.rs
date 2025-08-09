@@ -4,7 +4,6 @@ use avian3d::prelude::*;
 use bevy_app::prelude::*;
 use bevy_ecs::prelude::*;
 use bevy_rerecast_core::{NavmeshApp as _, NavmeshSettings, rerecast::TriMesh};
-use bevy_transform::prelude::*;
 
 mod collider_to_trimesh;
 pub use crate::collider_to_trimesh::ColliderToTriMesh;
@@ -27,12 +26,12 @@ impl Plugin for AvianBackendPlugin {
 
 fn collider_backend(
     input: In<NavmeshSettings>,
-    colliders: Query<(Entity, &GlobalTransform, &Collider, &ColliderOf)>,
+    colliders: Query<(Entity, &Collider, &Position, &Rotation, &ColliderOf)>,
     bodies: Query<&RigidBody>,
-) -> Vec<(GlobalTransform, TriMesh)> {
-    colliders
+) -> Option<TriMesh> {
+    let affectors = colliders
         .iter()
-        .filter_map(|(entity, transform, collider, collider_of)| {
+        .filter_map(|(entity, collider, pos, rot, collider_of)| {
             if input
                 .filter
                 .as_ref()
@@ -45,8 +44,18 @@ fn collider_backend(
                 return None;
             }
             let subdivisions = 10;
-            let mesh = collider.to_trimesh(subdivisions)?;
-            Some((*transform, mesh))
+            collider.to_trimesh(*pos, *rot, subdivisions)
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    if affectors.is_empty() {
+        return None;
+    }
+    affectors
+        .into_iter()
+        .fold(TriMesh::default(), |mut acc, t| {
+            acc.extend(t);
+            acc
+        })
+        .into()
 }

@@ -18,15 +18,12 @@ pub(super) fn plugin(app: &mut App) {
 
 fn editor_backend(
     _: In<NavmeshSettings>,
-    affectors: Query<(&GlobalTransform, &NavmeshAffector)>,
-) -> Vec<(GlobalTransform, TriMesh)> {
-    affectors
-        .iter()
-        .map(|(transform, affector)| (*transform, affector.0.clone()))
-        .collect()
+    affectors: Option<Res<NavmeshAffector>>,
+) -> Option<TriMesh> {
+    affectors.map(|a| a.0.clone())
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut)]
 pub(crate) struct NavmeshAffector(pub(crate) TriMesh);
 
 #[derive(Event)]

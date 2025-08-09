@@ -17,7 +17,7 @@ use bevy_rerecast::editor_integration::{
 
 use crate::{
     backend::{GlobalNavmeshSettings, NavmeshAffector, NavmeshHandle},
-    visualization::VisualMesh,
+    visualization::{AffectorGizmo, VisualMesh},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -151,7 +151,7 @@ fn poll_navmesh_input(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
-    mesh_handles: Query<Entity, (With<Mesh3d>, Or<(With<VisualMesh>, With<NavmeshAffector>)>)>,
+    mesh_handles: Query<Entity, (With<Mesh3d>, With<VisualMesh>)>,
     gizmo_handles: Query<&Gizmo>,
     mut gizmos: ResMut<Assets<GizmoAsset>>,
     mut navmesh_handle: ResMut<NavmeshHandle>,
@@ -175,35 +175,37 @@ fn poll_navmesh_input(
         gizmo.clear();
     }
 
-    for affector in response.affector_meshes {
-        let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all())
-            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, affector.mesh.vertices.clone())
-            .with_inserted_indices(Indices::U32(
-                affector
-                    .mesh
-                    .indices
-                    .iter()
-                    .flat_map(|indices| indices.to_array())
-                    .collect(),
-            ));
-
-        commands.spawn((
-            affector.transform.compute_transform(),
-            Mesh3d(meshes.add(mesh)),
-            NavmeshAffector(affector.mesh),
-            Visibility::Hidden,
-            Gizmo {
-                handle: gizmos.add(GizmoAsset::new()),
-                line_config: GizmoLineConfig {
-                    perspective: true,
-                    width: 20.0,
-                    joints: GizmoLineJoint::Bevel,
-                    ..default()
-                },
-                depth_bias: -0.001,
-            },
+    let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all())
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            response.affectors.vertices.clone(),
+        )
+        .with_inserted_indices(Indices::U32(
+            response
+                .affectors
+                .indices
+                .iter()
+                .flat_map(|indices| indices.to_array())
+                .collect(),
         ));
-    }
+
+    commands.spawn((
+        Transform::default(),
+        Mesh3d(meshes.add(mesh)),
+        Visibility::Hidden,
+        AffectorGizmo,
+        Gizmo {
+            handle: gizmos.add(GizmoAsset::new()),
+            line_config: GizmoLineConfig {
+                perspective: true,
+                width: 20.0,
+                joints: GizmoLineJoint::Bevel,
+                ..default()
+            },
+            depth_bias: -0.001,
+        },
+    ));
+    commands.insert_resource(NavmeshAffector(response.affectors));
 
     let mut image_indices: HashMap<u32, Handle<Image>> = HashMap::new();
     let mut material_indices: HashMap<u32, Handle<StandardMaterial>> = HashMap::new();

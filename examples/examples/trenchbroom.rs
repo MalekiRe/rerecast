@@ -18,36 +18,23 @@ fn main() -> AppExit {
         }))
         .add_plugins(PhysicsPlugins::default())
         .add_plugins(TrenchBroomPlugins(
-            TrenchBroomConfig::new("bevy_rerecast").assets_path("scenes/trenchbroom/assets"),
+            TrenchBroomConfig::new("bevy_rerecast")
+                .assets_path("scenes/trenchbroom/assets")
+                .default_solid_spawn_hooks(|| {
+                    SpawnHooks::new()
+                        .convex_collider()
+                        .smooth_by_default_angle()
+                }),
         ))
-        .register_type::<Worldspawn>()
         .add_plugins((RemotePlugin::default(), RemoteHttpPlugin::default()))
         .add_plugins((NavmeshPlugins::default(), AvianBackendPlugin::default()))
-        .add_systems(Startup, (write_trenchbroom_config, setup).chain())
+        .add_systems(Startup, setup)
         .add_systems(
             Update,
             generate_navmesh.run_if(input_just_pressed(KeyCode::Space)),
         )
         .add_observer(configure_camera)
         .run()
-}
-
-#[derive(SolidClass, Component, Reflect)]
-#[reflect(QuakeClass, Component)]
-#[spawn_hooks(SpawnHooks::new().smooth_by_default_angle().convex_collider())]
-struct Worldspawn;
-
-fn write_trenchbroom_config(server: Res<TrenchBroomServer>, type_registry: Res<AppTypeRegistry>) {
-    if let Err(err) = server
-        .config
-        .write_game_config_to_default_directory(&type_registry.read())
-    {
-        error!("Could not write TrenchBroom game config: {err}");
-    }
-
-    if let Err(err) = server.config.add_game_to_preferences_in_default_directory() {
-        error!("Could not write TrenchBroom preferences: {err}");
-    }
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {

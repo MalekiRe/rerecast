@@ -8,7 +8,7 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{prelude::*, system::SystemParam};
 use bevy_platform::collections::HashMap;
 use bevy_tasks::{AsyncComputeTaskPool, Task, futures_lite::future};
-use bevy_transform::{TransformSystem, components::GlobalTransform};
+use bevy_transform::TransformSystem;
 use glam::{U16Vec3, Vec3, Vec3A};
 use rerecast::{Aabb3d, DetailNavmesh, HeightfieldBuilder, TriMesh};
 
@@ -101,7 +101,13 @@ fn drain_queue_into_tasks(world: &mut World) {
             return;
         };
         let affectors = match world.run_system_with(backend.0, input.clone()) {
-            Ok(affectors) => affectors,
+            Ok(Some(affectors)) => affectors,
+            Ok(None) => {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Cannot generate navmesh: Backend returned no trimesh");
+                // Continue with the next queued item
+                continue;
+            }
             Err(err) => {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Cannot generate navmesh: Backend error: {err}");
@@ -160,18 +166,7 @@ fn poll_tasks(
 #[derive(Debug, Event, Deref, DerefMut)]
 pub struct NavmeshReady(pub AssetId<Navmesh>);
 
-async fn generate_navmesh(
-    affectors: Vec<(GlobalTransform, TriMesh)>,
-    settings: NavmeshSettings,
-) -> Result<Navmesh> {
-    let mut trimesh = TriMesh::default();
-    for (transform, mut current_trimesh) in affectors {
-        let transform = transform.compute_transform();
-        for vertex in &mut current_trimesh.vertices {
-            *vertex = transform.transform_point(Vec3::from(*vertex)).into();
-        }
-        trimesh.extend(current_trimesh);
-    }
+async fn generate_navmesh(mut trimesh: TriMesh, settings: NavmeshSettings) -> Result<Navmesh> {
     let up = settings.up;
     match up {
         Vec3::Y => {

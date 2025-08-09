@@ -5,16 +5,13 @@ use bevy_ecs::{prelude::*, system::SystemId};
 use bevy_math::bounding::Aabb3d;
 use bevy_platform::collections::HashSet;
 use bevy_reflect::prelude::*;
-use bevy_transform::prelude::*;
 use glam::Vec3;
 use rerecast::{BuildContoursFlags, ConfigBuilder, ConvexVolume, TriMesh};
 use serde::{Deserialize, Serialize};
 
 /// The current backend registered through [`NavmeshApp::set_navmesh_affector_backend`]
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
-pub struct NavmeshAffectorBackend(
-    pub SystemId<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>>,
-);
+pub struct NavmeshAffectorBackend(pub SystemId<In<NavmeshSettings>, Option<TriMesh>>);
 
 /// Extension used to implement [`NavmeshApp::set_navmesh_affector_backend`] on [`App`]
 pub trait NavmeshApp {
@@ -22,14 +19,14 @@ pub trait NavmeshApp {
     /// Setting a backend will replace any existing backend. By default, no backend is set.
     fn set_navmesh_affector_backend<M>(
         &mut self,
-        system: impl IntoSystem<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>, M> + 'static,
+        system: impl IntoSystem<In<NavmeshSettings>, Option<TriMesh>, M> + 'static,
     ) -> &mut App;
 }
 
 impl NavmeshApp for App {
     fn set_navmesh_affector_backend<M>(
         &mut self,
-        system: impl IntoSystem<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>, M> + 'static,
+        system: impl IntoSystem<In<NavmeshSettings>, Option<TriMesh>, M> + 'static,
     ) -> &mut App {
         let id = self.register_system(system);
         self.world_mut().insert_resource(NavmeshAffectorBackend(id));
