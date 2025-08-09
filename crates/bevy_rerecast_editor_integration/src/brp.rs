@@ -79,14 +79,7 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
         });
     };
     let affectors = match world.run_system_with(*backend_id, params.backend_input) {
-        Ok(Some(result)) => result,
-        Ok(None) => {
-            return Err(BrpError {
-                code: bevy_remote::error_codes::INTERNAL_ERROR,
-                message: format!("Navmesh affector backend failed: Returned no trimesh"),
-                data: None,
-            });
-        }
+        Ok(result) => result,
         Err(err) => {
             return Err(BrpError {
                 code: bevy_remote::error_codes::INTERNAL_ERROR,

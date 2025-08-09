@@ -28,8 +28,8 @@ fn collider_backend(
     input: In<NavmeshSettings>,
     colliders: Query<(Entity, &Collider, &Position, &Rotation, &ColliderOf)>,
     bodies: Query<&RigidBody>,
-) -> Option<TriMesh> {
-    let affectors = colliders
+) -> TriMesh {
+    colliders
         .iter()
         .filter_map(|(entity, collider, pos, rot, collider_of)| {
             if input
@@ -46,16 +46,8 @@ fn collider_backend(
             let subdivisions = 10;
             collider.to_trimesh(*pos, *rot, subdivisions)
         })
-        .collect::<Vec<_>>();
-
-    if affectors.is_empty() {
-        return None;
-    }
-    affectors
-        .into_iter()
         .fold(TriMesh::default(), |mut acc, t| {
             acc.extend(t);
             acc
         })
-        .into()
 }

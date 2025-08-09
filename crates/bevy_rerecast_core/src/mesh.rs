@@ -34,8 +34,8 @@ fn mesh3d_backend(
     input: In<NavmeshSettings>,
     meshes: Res<Assets<Mesh>>,
     affectors: Query<(Entity, &GlobalTransform, &Mesh3d), Without<ExcludeMeshFromNavmesh>>,
-) -> Option<TriMesh> {
-    let affectors = affectors
+) -> TriMesh {
+    affectors
         .iter()
         .filter_map(|(entity, transform, mesh)| {
             if input
@@ -49,17 +49,10 @@ fn mesh3d_backend(
             let mesh = meshes.get(mesh)?.clone().transformed_by(transform);
             TriMesh::from_mesh(&mesh)
         })
-        .collect::<Vec<_>>();
-    if affectors.is_empty() {
-        return None;
-    }
-    affectors
-        .into_iter()
         .fold(TriMesh::default(), |mut acc, t| {
             acc.extend(t);
             acc
         })
-        .into()
 }
 
 /// Used to add [`TriMeshFromBevyMesh::from_mesh`] to [`TriMesh`].

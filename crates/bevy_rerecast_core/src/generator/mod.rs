@@ -101,13 +101,7 @@ fn drain_queue_into_tasks(world: &mut World) {
             return;
         };
         let affectors = match world.run_system_with(backend.0, input.clone()) {
-            Ok(Some(affectors)) => affectors,
-            Ok(None) => {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Cannot generate navmesh: Backend returned no trimesh");
-                // Continue with the next queued item
-                continue;
-            }
+            Ok(affectors) => affectors,
             Err(err) => {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Cannot generate navmesh: Backend error: {err}");

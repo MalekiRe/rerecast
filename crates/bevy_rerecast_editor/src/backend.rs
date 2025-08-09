@@ -13,17 +13,15 @@ pub(super) fn plugin(app: &mut App) {
     );
     app.add_observer(build_navmesh);
     app.init_resource::<GlobalNavmeshSettings>()
-        .init_resource::<NavmeshHandle>();
+        .init_resource::<NavmeshHandle>()
+        .init_resource::<NavmeshAffector>();
 }
 
-fn editor_backend(
-    _: In<NavmeshSettings>,
-    affectors: Option<Res<NavmeshAffector>>,
-) -> Option<TriMesh> {
-    affectors.map(|a| a.0.clone())
+fn editor_backend(_: In<NavmeshSettings>, affectors: Res<NavmeshAffector>) -> TriMesh {
+    affectors.0.clone()
 }
 
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut, Default)]
 pub(crate) struct NavmeshAffector(pub(crate) TriMesh);
 
 #[derive(Event)]
