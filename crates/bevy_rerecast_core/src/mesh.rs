@@ -33,9 +33,9 @@ pub struct ExcludeMeshFromNavmesh;
 fn mesh3d_backend(
     input: In<NavmeshSettings>,
     meshes: Res<Assets<Mesh>>,
-    meshes: Query<(Entity, &GlobalTransform, &Mesh3d), Without<ExcludeMeshFromNavmesh>>,
+    obstacles: Query<(Entity, &GlobalTransform, &Mesh3d), Without<ExcludeMeshFromNavmesh>>,
 ) -> TriMesh {
-    meshes
+    obstacles
         .iter()
         .filter_map(|(entity, transform, mesh)| {
             if input

@@ -78,8 +78,8 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
             data: None,
         });
     };
-    let obstables = match world.run_system_with(*backend_id, params.backend_input) {
-        Ok(result) => result,
+    let obstacles = match world.run_system_with(*backend_id, params.backend_input) {
+        Ok(obstacles) => obstacles,
         Err(err) => {
             return Err(BrpError {
                 code: bevy_remote::error_codes::INTERNAL_ERROR,
