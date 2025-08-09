@@ -111,6 +111,11 @@ fn spawn_ui(mut commands: Commands) {
                         GlobalNavmeshSettings::default().agent_height,
                         WalkableHeightInput,
                     ));
+                    parent.spawn(decimal_input(
+                        "Agent Walkable Climb",
+                        GlobalNavmeshSettings::default().walkable_climb,
+                        WalkableClimbInput,
+                    ));
                 })),
                 BackgroundColor(BEVY_GRAY.with_alpha(0.6)),
             ),
@@ -144,12 +149,16 @@ struct WalkableHeightInput;
 #[derive(Component)]
 struct WalkableRadiusInput;
 
+#[derive(Component)]
+struct WalkableClimbInput;
+
 fn read_config_inputs(
     mut settings: ResMut<GlobalNavmeshSettings>,
     cell_size: Single<&TextInputContents, With<CellSizeInput>>,
     cell_height: Single<&TextInputContents, With<CellHeightInput>>,
     walkable_height: Single<&TextInputContents, With<WalkableHeightInput>>,
     walkable_radius: Single<&TextInputContents, With<WalkableRadiusInput>>,
+    walkable_climb: Single<&TextInputContents, With<WalkableClimbInput>>,
 ) {
     let d = NavmeshSettings::default();
     settings.0 = NavmeshSettings {
@@ -157,7 +166,7 @@ fn read_config_inputs(
         cell_height_fraction: cell_height.get().parse().unwrap_or(d.cell_height_fraction),
         walkable_slope_angle: d.walkable_slope_angle,
         agent_height: walkable_height.get().parse().unwrap_or(d.agent_height),
-        walkable_climb: d.walkable_climb,
+        walkable_climb: walkable_climb.get().parse().unwrap_or(d.walkable_climb),
         agent_radius: walkable_radius.get().parse().unwrap_or(d.agent_radius),
         min_region_size: d.min_region_size,
         merge_region_size: d.merge_region_size,

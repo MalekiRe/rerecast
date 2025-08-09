@@ -193,7 +193,7 @@
 //!   - [ ] Advanced config
 //!   - [x] Visualize navmesh
 //!   - [x] Save navmesh
-//!   - [ ] Load navmesh config
+//!   - [x] Load navmesh and its config
 //! - API
 //!   - [x] Optional editor communication
 //!   - [x] Generate navmeshes on demand
