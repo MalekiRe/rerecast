@@ -215,7 +215,11 @@ fn poll_navmesh_input(
             mesh_handle.clone()
         } else {
             let serialized_mesh = response.meshes[visual.mesh as usize].clone();
-            let mesh = serialized_mesh.into_mesh();
+            let mut mesh = serialized_mesh.into_mesh();
+            // Need to exclude these as we don't replicate `SkinnedMesh`, but having joint attributes without a `SkinnedMesh` crashes Bevy.
+            // See https://github.com/bevyengine/bevy/issues/16929
+            mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_INDEX);
+            mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_WEIGHT);
             let handle = meshes.add(mesh);
             mesh_indices.insert(visual.mesh, handle.clone());
             handle

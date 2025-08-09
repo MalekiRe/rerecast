@@ -53,10 +53,8 @@ impl SerializedMesh {
             Mesh::ATTRIBUTE_UV_1,
             Mesh::ATTRIBUTE_TANGENT,
             Mesh::ATTRIBUTE_COLOR,
-            // Excluded due to https://github.com/bevyengine/bevy/issues/16929
-            //
-            // Mesh::ATTRIBUTE_JOINT_WEIGHT,
-            // Mesh::ATTRIBUTE_JOINT_INDEX,
+            Mesh::ATTRIBUTE_JOINT_WEIGHT,
+            Mesh::ATTRIBUTE_JOINT_INDEX,
         ];
         for (attribute, values) in self.attributes {
             // Safety: this is just a newtype wrapper around a u64, so we can safely transmute it
