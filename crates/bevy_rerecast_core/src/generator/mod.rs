@@ -129,7 +129,6 @@ fn poll_tasks(
     mut navmeshes: ResMut<Assets<Navmesh>>,
 ) {
     let mut removed_ids = Vec::new();
-    let mut ready_ids = Vec::new();
     for (id, task) in tasks.iter_mut() {
         let Some(strong) = id.upgrade() else {
             removed_ids.push(id.clone());
@@ -149,18 +148,11 @@ fn poll_tasks(
             }
         };
         // Process the generated navmesh
-        ready_ids.push(id.clone());
         navmeshes.insert(strong.id(), navmesh);
+        commands.trigger(NavmeshReady(strong.id()));
     }
     for id in removed_ids {
         tasks.remove(&id);
-    }
-
-    for id in ready_ids {
-        let Some(strong) = id.upgrade() else {
-            continue;
-        };
-        commands.trigger(NavmeshReady(strong.id()));
     }
 }
 
