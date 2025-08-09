@@ -6,7 +6,7 @@ use bevy_rerecast::{
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.set_navmesh_affector_backend(editor_backend);
+    app.set_navmesh_backend(editor_backend);
     app.add_systems(
         Update,
         insert_gizmos.run_if(resource_exists_and_changed::<NavmeshHandle>),
@@ -14,15 +14,15 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(build_navmesh);
     app.init_resource::<GlobalNavmeshSettings>()
         .init_resource::<NavmeshHandle>()
-        .init_resource::<NavmeshAffector>();
+        .init_resource::<NavmeshObstacles>();
 }
 
-fn editor_backend(_: In<NavmeshSettings>, affectors: Res<NavmeshAffector>) -> TriMesh {
-    affectors.0.clone()
+fn editor_backend(_: In<NavmeshSettings>, obstacles: Res<NavmeshObstacles>) -> TriMesh {
+    obstacles.0.clone()
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub(crate) struct NavmeshAffector(pub(crate) TriMesh);
+pub(crate) struct NavmeshObstacles(pub(crate) TriMesh);
 
 #[derive(Event)]
 pub(crate) struct BuildNavmesh;

@@ -20,7 +20,7 @@ pub struct AvianBackendPlugin;
 
 impl Plugin for AvianBackendPlugin {
     fn build(&self, app: &mut App) {
-        app.set_navmesh_affector_backend(collider_backend);
+        app.set_navmesh_backend(collider_backend);
     }
 }
 

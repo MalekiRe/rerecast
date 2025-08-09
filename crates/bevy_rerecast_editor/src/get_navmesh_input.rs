@@ -16,8 +16,8 @@ use bevy_rerecast::editor_integration::{
 };
 
 use crate::{
-    backend::{GlobalNavmeshSettings, NavmeshAffector, NavmeshHandle},
-    visualization::{AffectorGizmo, VisualMesh},
+    backend::{GlobalNavmeshSettings, NavmeshHandle, NavmeshObstacles},
+    visualization::{OstacleGizmo, VisualMesh},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -178,11 +178,11 @@ fn poll_navmesh_input(
     let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all())
         .with_inserted_attribute(
             Mesh::ATTRIBUTE_POSITION,
-            response.affectors.vertices.clone(),
+            response.obstacles.vertices.clone(),
         )
         .with_inserted_indices(Indices::U32(
             response
-                .affectors
+                .obstacles
                 .indices
                 .iter()
                 .flat_map(|indices| indices.to_array())
@@ -193,7 +193,7 @@ fn poll_navmesh_input(
         Transform::default(),
         Mesh3d(meshes.add(mesh)),
         Visibility::Hidden,
-        AffectorGizmo,
+        OstacleGizmo,
         Gizmo {
             handle: gizmos.add(GizmoAsset::new()),
             line_config: GizmoLineConfig {
@@ -205,7 +205,7 @@ fn poll_navmesh_input(
             depth_bias: -0.001,
         },
     ));
-    commands.insert_resource(NavmeshAffector(response.affectors));
+    commands.insert_resource(NavmeshObstacles(response.obstacles));
 
     let mut image_indices: HashMap<u32, Handle<Image>> = HashMap::new();
     let mut material_indices: HashMap<u32, Handle<StandardMaterial>> = HashMap::new();

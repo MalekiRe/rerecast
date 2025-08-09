@@ -78,8 +78,8 @@ fn spawn_ui(mut commands: Commands) {
                         toggle_gizmo(AvailableGizmos::Visual),
                     ));
                     parent.spawn(checkbox(
-                        "Show Affector",
-                        toggle_gizmo(AvailableGizmos::Affector),
+                        "Show Obstacles",
+                        toggle_gizmo(AvailableGizmos::Obstacles),
                     ));
                     parent.spawn(checkbox(
                         "Show Polygon Mesh",
