@@ -203,7 +203,7 @@ fn poll_navmesh_input(
                 joints: GizmoLineJoint::Bevel,
                 ..default()
             },
-            depth_bias: -0.001,
+            depth_bias: -0.005,
         },
     ));
     commands.insert_resource(NavmeshObstacles(response.obstacles));
