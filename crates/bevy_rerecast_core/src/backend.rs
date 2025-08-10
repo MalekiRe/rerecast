@@ -5,39 +5,38 @@ use bevy_ecs::{prelude::*, system::SystemId};
 use bevy_math::bounding::Aabb3d;
 use bevy_platform::collections::HashSet;
 use bevy_reflect::prelude::*;
-use bevy_transform::prelude::*;
 use glam::Vec3;
 use rerecast::{BuildContoursFlags, ConfigBuilder, ConvexVolume, TriMesh};
 use serde::{Deserialize, Serialize};
 
-/// The current backend registered through [`NavmeshApp::set_navmesh_affector_backend`]
+/// The current backend registered through [`NavmeshApp::set_navmesh_backend`]
 #[derive(Resource, Debug, Clone, Deref, DerefMut)]
-pub struct NavmeshAffectorBackend(
-    pub SystemId<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>>,
-);
+pub struct NavmeshBackend(pub SystemId<In<NavmeshSettings>, TriMesh>);
 
-/// Extension used to implement [`NavmeshApp::set_navmesh_affector_backend`] on [`App`]
+/// Extension used to implement [`NavmeshApp::set_navmesh_backend`] on [`App`]
 pub trait NavmeshApp {
-    /// Set the backend for generating navmesh affectors. Only one backend can be set at a time.
+    /// Set the backend for generating navmesh obstacles. Only one backend can be set at a time.
     /// Setting a backend will replace any existing backend. By default, no backend is set.
-    fn set_navmesh_affector_backend<M>(
+    ///
+    /// The backend is supposed to return a single [`TriMesh`] containing the geometry for all obstacles in the scene in global units.
+    fn set_navmesh_backend<M>(
         &mut self,
-        system: impl IntoSystem<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>, M> + 'static,
+        system: impl IntoSystem<In<NavmeshSettings>, TriMesh, M> + 'static,
     ) -> &mut App;
 }
 
 impl NavmeshApp for App {
-    fn set_navmesh_affector_backend<M>(
+    fn set_navmesh_backend<M>(
         &mut self,
-        system: impl IntoSystem<In<NavmeshSettings>, Vec<(GlobalTransform, TriMesh)>, M> + 'static,
+        system: impl IntoSystem<In<NavmeshSettings>, TriMesh, M> + 'static,
     ) -> &mut App {
         let id = self.register_system(system);
-        self.world_mut().insert_resource(NavmeshAffectorBackend(id));
+        self.world_mut().insert_resource(NavmeshBackend(id));
         self
     }
 }
 
-/// The input passed to the navmesh affector backend system.
+/// The input passed to the navmesh backend system.
 #[derive(Debug, Clone, PartialEq, Reflect, Serialize, Deserialize)]
 #[reflect(Serialize, Deserialize)]
 pub struct NavmeshSettings {
@@ -159,7 +158,7 @@ pub struct NavmeshSettings {
     pub tile_size: u16,
     /// The navmesh's AABB [Units: wu]
     ///
-    /// If left at `None`, the AABB will be automatically computed based on the available navmesh affectors.
+    /// If left at `None`, the AABB will be automatically computed based on the available navmesh obstacles.
     pub aabb: Option<Aabb3d>,
     /// Flags controlling the [`ContourSet`](crate::rerecast::ContourSet) generation process.
     pub contour_flags: BuildContoursFlags,
@@ -167,9 +166,9 @@ pub struct NavmeshSettings {
     pub tiling: bool,
     /// Volumes that define areas with specific areas IDs.
     pub area_volumes: Vec<ConvexVolume>,
-    /// An optional list of entities to generate navmesh affectors for.
-    /// If `Some`, the backend is expected to only consider the specified entities when generating affectors.
-    /// If `None`, the backend is expected to generate affectors for as many entities as is reasonable.
+    /// An optional list of entities to consider as navmesh obstacles.
+    /// If `Some`, the backend is expected to only consider the specified entities when generating a trimesh for the obstacles.
+    /// If `None`, the backend is expected to consider for as many entities as obstacles as is reasonable.
     pub filter: Option<HashSet<Entity>>,
     /// The direction considered up. The following values are supported:
     /// - [`Vec3::Y`]: Typically used in 3D

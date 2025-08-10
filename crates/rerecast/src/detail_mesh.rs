@@ -87,7 +87,7 @@ pub struct DetailNavmesh {
     pub vertices: Vec<Vec3>,
     /// The mesh triangles.
     ///
-    /// The triangles are grouped by sub-mesh.
+    /// The triangles are grouped by sub-mesh. Their winding order is clockwise on the XZ plane.
     ///
     /// ## Vertex Indices
     ///

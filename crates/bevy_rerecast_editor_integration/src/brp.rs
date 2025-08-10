@@ -11,7 +11,7 @@ use bevy_pbr::{MeshMaterial3d, StandardMaterial};
 use bevy_platform::collections::HashMap;
 use bevy_remote::{BrpError, BrpResult, RemoteMethodSystemId, RemoteMethods};
 use bevy_render::prelude::*;
-use bevy_rerecast_core::{NavmeshAffectorBackend, NavmeshSettings};
+use bevy_rerecast_core::{NavmeshBackend, NavmeshSettings};
 use bevy_tasks::{AsyncComputeTaskPool, Task, futures_lite::future};
 use bevy_transform::prelude::*;
 use rerecast::TriMesh;
@@ -45,7 +45,7 @@ fn setup_methods(mut methods: ResMut<RemoteMethods>, mut commands: Commands) {
 /// The parameters for [`BRP_GENERATE_EDITOR_INPUT`].
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct GenerateEditorInputParams {
-    /// Input for the navmesh affector backend.
+    /// Input for the navmesh backend.
     pub backend_input: NavmeshSettings,
 }
 
@@ -71,27 +71,23 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
             });
         }
     };
-    let Some(backend_id) = world.get_resource::<NavmeshAffectorBackend>().cloned() else {
+    let Some(backend_id) = world.get_resource::<NavmeshBackend>().cloned() else {
         return Err(BrpError {
             code: bevy_remote::error_codes::RESOURCE_NOT_PRESENT,
-            message: "No navmesh affector backend found. Did you forget to add one?".to_string(),
+            message: "No navmesh backend found. Did you forget to add one?".to_string(),
             data: None,
         });
     };
-    let affectors = match world.run_system_with(*backend_id, params.backend_input) {
-        Ok(result) => result,
+    let obstacles = match world.run_system_with(*backend_id, params.backend_input) {
+        Ok(obstacles) => obstacles,
         Err(err) => {
             return Err(BrpError {
                 code: bevy_remote::error_codes::INTERNAL_ERROR,
-                message: format!("Navmesh affector backend failed: {err}"),
+                message: format!("Navmesh backend failed: {err}"),
                 data: None,
             });
         }
     };
-    let affectors = affectors
-        .into_iter()
-        .map(|(transform, mesh)| AffectorMesh { transform, mesh })
-        .collect();
 
     let mut visuals = world.query_filtered::<(
         &GlobalTransform,
@@ -180,7 +176,7 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
         })
         .collect::<Vec<_>>();
     let response = PollEditorInputResponse {
-        affector_meshes: affectors,
+        obstacles,
         visual_meshes: visuals,
         materials: serialized_materials,
         meshes: serialized_meshes,
@@ -297,9 +293,9 @@ pub struct EditorInputTaskId(pub String);
 /// Data for the editor. Provided in [`PollEditorInputResponse`].
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct PollEditorInputResponse {
-    /// The meshes that affect the navmesh.
-    pub affector_meshes: Vec<AffectorMesh>,
-    /// Additional meshes that don't affect the navmesh, but are sent to the editor for visualization.
+    /// The trimesh containing all navmesh obstacles.
+    pub obstacles: TriMesh,
+    /// Meshes that are not obstacles, but are sent to the editor for visualizing the level.
     pub visual_meshes: Vec<VisualMesh>,
     /// Materials indexed by [`Self::visual_meshes`].
     pub materials: Vec<SerializedStandardMaterial>,
@@ -309,16 +305,7 @@ pub struct PollEditorInputResponse {
     pub images: Vec<SerializedImage>,
 }
 
-/// A mesh that affects the navmesh.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AffectorMesh {
-    /// The transform of the mesh.
-    pub transform: GlobalTransform,
-    /// The mesh data.
-    pub mesh: TriMesh,
-}
-
-/// A mesh that doesn't affect the navmesh, but is sent to the editor for visualization.
+/// A mesh is not considered an obstacle, but is sent to the editor for visualizing the level.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VisualMesh {
     /// The transform of the mesh.

@@ -14,6 +14,7 @@ use rfd::AsyncFileDialog;
 use crate::{
     backend::{BuildNavmesh, GlobalNavmeshSettings},
     get_navmesh_input::GetNavmeshInput,
+    load::LoadTask,
     save::SaveTask,
     theme::{
         palette::BEVY_GRAY,
@@ -59,6 +60,7 @@ fn spawn_ui(mut commands: Commands) {
                     button("Load Scene", spawn_load_scene_modal),
                     button("Build Navmesh", build_navmesh),
                     button("Save", save_navmesh),
+                    button("Load Navmesh", load_navmesh),
                 ]
             ),
             (
@@ -76,8 +78,8 @@ fn spawn_ui(mut commands: Commands) {
                         toggle_gizmo(AvailableGizmos::Visual),
                     ));
                     parent.spawn(checkbox(
-                        "Show Affector",
-                        toggle_gizmo(AvailableGizmos::Affector),
+                        "Show Obstacles",
+                        toggle_gizmo(AvailableGizmos::Obstacles),
                     ));
                     parent.spawn(checkbox(
                         "Show Polygon Mesh",
@@ -108,6 +110,11 @@ fn spawn_ui(mut commands: Commands) {
                         "Agent Height",
                         GlobalNavmeshSettings::default().agent_height,
                         WalkableHeightInput,
+                    ));
+                    parent.spawn(decimal_input(
+                        "Agent Walkable Climb",
+                        GlobalNavmeshSettings::default().walkable_climb,
+                        WalkableClimbInput,
                     ));
                 })),
                 BackgroundColor(BEVY_GRAY.with_alpha(0.6)),
@@ -142,12 +149,16 @@ struct WalkableHeightInput;
 #[derive(Component)]
 struct WalkableRadiusInput;
 
+#[derive(Component)]
+struct WalkableClimbInput;
+
 fn read_config_inputs(
     mut settings: ResMut<GlobalNavmeshSettings>,
     cell_size: Single<&TextInputContents, With<CellSizeInput>>,
     cell_height: Single<&TextInputContents, With<CellHeightInput>>,
     walkable_height: Single<&TextInputContents, With<WalkableHeightInput>>,
     walkable_radius: Single<&TextInputContents, With<WalkableRadiusInput>>,
+    walkable_climb: Single<&TextInputContents, With<WalkableClimbInput>>,
 ) {
     let d = NavmeshSettings::default();
     settings.0 = NavmeshSettings {
@@ -155,7 +166,7 @@ fn read_config_inputs(
         cell_height_fraction: cell_height.get().parse().unwrap_or(d.cell_height_fraction),
         walkable_slope_angle: d.walkable_slope_angle,
         agent_height: walkable_height.get().parse().unwrap_or(d.agent_height),
-        walkable_climb: d.walkable_climb,
+        walkable_climb: walkable_climb.get().parse().unwrap_or(d.walkable_climb),
         agent_radius: walkable_radius.get().parse().unwrap_or(d.agent_radius),
         min_region_size: d.min_region_size,
         merge_region_size: d.merge_region_size,
@@ -205,6 +216,32 @@ fn save_navmesh(
         .save_file();
     let task = thread_pool.spawn(future);
     commands.insert_resource(SaveTask(task));
+}
+
+fn load_navmesh(
+    _: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    maybe_task: Option<Res<LoadTask>>,
+    window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
+) {
+    if maybe_task.is_some() {
+        // Already saving, do nothing
+        return;
+    }
+
+    // Safety: we're on the main thread, so this is fine??? I think??
+    let window_handle = unsafe { window_handle.get_handle() };
+    let thread_pool = AsyncComputeTaskPool::get();
+    let future = AsyncFileDialog::new()
+        .add_filter("Navmesh", &["nav"])
+        .add_filter("All files", &["*"])
+        .set_title("Load Navmesh")
+        .set_file_name("navmesh.nav")
+        .set_parent(&window_handle)
+        .set_can_create_directories(false)
+        .pick_file();
+    let task = thread_pool.spawn(future);
+    commands.insert_resource(LoadTask(task));
 }
 
 fn spawn_load_scene_modal(_: Trigger<Pointer<Click>>, mut commands: Commands) {

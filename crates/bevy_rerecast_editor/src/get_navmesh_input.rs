@@ -16,8 +16,8 @@ use bevy_rerecast::editor_integration::{
 };
 
 use crate::{
-    backend::{GlobalNavmeshSettings, NavmeshAffector, NavmeshHandle},
-    visualization::VisualMesh,
+    backend::{GlobalNavmeshSettings, NavmeshHandle, NavmeshObstacles},
+    visualization::{OstacleGizmo, VisualMesh},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -151,7 +151,7 @@ fn poll_navmesh_input(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
-    mesh_handles: Query<Entity, (With<Mesh3d>, Or<(With<VisualMesh>, With<NavmeshAffector>)>)>,
+    mesh_handles: Query<Entity, (With<Mesh3d>, With<VisualMesh>)>,
     gizmo_handles: Query<&Gizmo>,
     mut gizmos: ResMut<Assets<GizmoAsset>>,
     mut navmesh_handle: ResMut<NavmeshHandle>,
@@ -175,35 +175,38 @@ fn poll_navmesh_input(
         gizmo.clear();
     }
 
-    for affector in response.affector_meshes {
-        let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all())
-            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, affector.mesh.vertices.clone())
-            .with_inserted_indices(Indices::U32(
-                affector
-                    .mesh
-                    .indices
-                    .iter()
-                    .flat_map(|indices| indices.to_array())
-                    .collect(),
-            ));
+    let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::all())
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            response.obstacles.vertices.clone(),
+        )
+        .with_inserted_indices(Indices::U32(
+            response
+                .obstacles
+                .indices
+                .iter()
+                .flat_map(|indices| indices.to_array())
+                .collect(),
+        ))
+        .with_computed_normals();
 
-        commands.spawn((
-            affector.transform.compute_transform(),
-            Mesh3d(meshes.add(mesh)),
-            NavmeshAffector(affector.mesh),
-            Visibility::Hidden,
-            Gizmo {
-                handle: gizmos.add(GizmoAsset::new()),
-                line_config: GizmoLineConfig {
-                    perspective: true,
-                    width: 20.0,
-                    joints: GizmoLineJoint::Bevel,
-                    ..default()
-                },
-                depth_bias: -0.001,
+    commands.spawn((
+        Transform::default(),
+        Mesh3d(meshes.add(mesh)),
+        Visibility::Hidden,
+        OstacleGizmo,
+        Gizmo {
+            handle: gizmos.add(GizmoAsset::new()),
+            line_config: GizmoLineConfig {
+                perspective: true,
+                width: 15.0,
+                joints: GizmoLineJoint::Bevel,
+                ..default()
             },
-        ));
-    }
+            depth_bias: -0.001,
+        },
+    ));
+    commands.insert_resource(NavmeshObstacles(response.obstacles));
 
     let mut image_indices: HashMap<u32, Handle<Image>> = HashMap::new();
     let mut material_indices: HashMap<u32, Handle<StandardMaterial>> = HashMap::new();
@@ -215,7 +218,11 @@ fn poll_navmesh_input(
             mesh_handle.clone()
         } else {
             let serialized_mesh = response.meshes[visual.mesh as usize].clone();
-            let mesh = serialized_mesh.into_mesh();
+            let mut mesh = serialized_mesh.into_mesh();
+            // Need to exclude these as we don't replicate `SkinnedMesh`, but having joint attributes without a `SkinnedMesh` crashes Bevy.
+            // See https://github.com/bevyengine/bevy/issues/16929
+            mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_INDEX);
+            mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_WEIGHT);
             let handle = meshes.add(mesh);
             mesh_indices.insert(visual.mesh, handle.clone());
             handle

@@ -1,6 +1,7 @@
 //! Contains traits and methods for converting [`Collider`]s into trimeshes, expressed as [`TrimeshedCollider`]s.
 
 use avian3d::{
+    math::AsF32,
     parry::shape::{Compound, TypedShape},
     prelude::*,
 };
@@ -31,16 +32,36 @@ pub trait ColliderToTriMesh {
     /// - [`RoundConvexPolyhedron`](avian3d::parry::shape::RoundConvexPolyhedron)
     /// - [`RoundCylinder`](avian3d::parry::shape::RoundCylinder)
     /// - [`RoundCone`](avian3d::parry::shape::RoundCone)
-    fn to_trimesh(&self, subdivisions: u32) -> Option<TriMesh>;
+    fn to_trimesh(
+        &self,
+        pos: impl Into<Position>,
+        rot: impl Into<Rotation>,
+        subdivisions: u32,
+    ) -> Option<TriMesh>;
 }
 
 impl ColliderToTriMesh for Collider {
-    fn to_trimesh(&self, subdivisions: u32) -> Option<TriMesh> {
-        shape_to_trimesh(&self.shape().as_typed_shape(), subdivisions)
+    fn to_trimesh(
+        &self,
+        pos: impl Into<Position>,
+        rot: impl Into<Rotation>,
+        subdivisions: u32,
+    ) -> Option<TriMesh> {
+        shape_to_trimesh(
+            &self.shape_scaled().as_typed_shape(),
+            pos.into(),
+            rot.into(),
+            subdivisions,
+        )
     }
 }
 
-fn shape_to_trimesh(shape: &TypedShape, subdivisions: u32) -> Option<TriMesh> {
+fn shape_to_trimesh(
+    shape: &TypedShape,
+    pos: Position,
+    rot: Rotation,
+    subdivisions: u32,
+) -> Option<TriMesh> {
     let (vertices, indices) = match shape {
         // Simple cases
         TypedShape::Cuboid(cuboid) => cuboid.to_trimesh(),
@@ -60,7 +81,7 @@ fn shape_to_trimesh(shape: &TypedShape, subdivisions: u32) -> Option<TriMesh> {
         TypedShape::Cone(cone) => cone.to_trimesh(subdivisions),
         // Compounds need to be unpacked
         TypedShape::Compound(compound) => {
-            return Some(compound_trimesh(compound, subdivisions));
+            return Some(compound_trimesh(compound, pos, rot, subdivisions));
         }
         // Rounded shapes ignore the rounding and use the inner shape
         TypedShape::RoundCuboid(round_shape) => round_shape.inner_shape.to_trimesh(),
@@ -82,41 +103,39 @@ fn shape_to_trimesh(shape: &TypedShape, subdivisions: u32) -> Option<TriMesh> {
         TypedShape::Custom(_shape) => return None,
     };
     let indices_len = indices.len();
+    let pos = Vec3A::from(pos.f32());
     Some(TriMesh {
-        vertices: vertices.into_iter().map(|v| v.into()).collect(),
+        vertices: vertices
+            .into_iter()
+            .map(|v| pos + Vec3A::from((rot * Vec3::from(v)).f32()))
+            .collect(),
         indices: indices.into_iter().map(|i| i.into()).collect(),
         area_types: vec![AreaType::NOT_WALKABLE; indices_len],
     })
 }
 
-fn compound_trimesh(compound: &Compound, subdivisions: u32) -> TriMesh {
+fn compound_trimesh(
+    compound: &Compound,
+    pos: Position,
+    rot: Rotation,
+    subdivisions: u32,
+) -> TriMesh {
     compound.shapes().iter().fold(
         TriMesh::default(),
-        |mut compound_trimesh, (isometry, shape)| {
+        |mut compound_trimesh, (sub_pos, shape)| {
+            let pos = Position(pos.0 + rot * Vec3::from(sub_pos.translation));
+            let rot = Rotation((rot.mul_quat(sub_pos.rotation.into())).normalize());
             let Some(trimesh) =
                 // No need to track recursive compounds because parry panics on nested compounds anyways lol
-                shape_to_trimesh(&shape.as_typed_shape(), subdivisions)
+                shape_to_trimesh(&shape.as_typed_shape(), pos, rot,  subdivisions)
             else {
                 return compound_trimesh;
             };
 
-            let isometry = Isometry3d {
-                translation: Vec3A::from(isometry.translation),
-                rotation: Quat::from(isometry.rotation),
-            };
-
-            apply_isometry(&mut compound_trimesh, isometry);
             compound_trimesh.extend(trimesh);
             compound_trimesh
         },
     )
-}
-
-/// Applies an isometry to the trimesh.
-pub fn apply_isometry(trimesh: &mut TriMesh, isometry: Isometry3d) {
-    trimesh.vertices.iter_mut().for_each(|v| {
-        *v = isometry * *v;
-    });
 }
 
 #[cfg(test)]
@@ -126,7 +145,9 @@ mod tests {
     #[test]
     fn rasterizes_cuboid() {
         let collider = Collider::cuboid(1.0, 2.0, 3.0);
-        let trimesh = collider.to_trimesh(1).unwrap();
+        let trimesh = collider
+            .to_trimesh(Position::default(), Rotation::default(), 1)
+            .unwrap();
         assert_eq!(trimesh.vertices.len(), 8);
         assert_eq!(trimesh.indices.len(), 12);
     }

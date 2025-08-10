@@ -8,14 +8,14 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{prelude::*, system::SystemParam};
 use bevy_platform::collections::HashMap;
 use bevy_tasks::{AsyncComputeTaskPool, Task, futures_lite::future};
-use bevy_transform::{TransformSystem, components::GlobalTransform};
+use bevy_transform::TransformSystem;
 use glam::{U16Vec3, Vec3, Vec3A};
 use rerecast::{Aabb3d, DetailNavmesh, HeightfieldBuilder, TriMesh};
 
 mod upgradable_asset_id;
 use upgradable_asset_id::UpgradableAssetId;
 
-use crate::{Navmesh, NavmeshAffectorBackend, NavmeshSettings};
+use crate::{Navmesh, NavmeshBackend, NavmeshSettings};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<NavmeshQueue>();
@@ -43,7 +43,7 @@ impl<'w> NavmeshGenerator<'w> {
     /// Queue a navmesh generation task.
     /// When you call this method, a new navmesh will be generated asynchronously.
     /// Calling it multiple times will queue multiple navmeshes to be generated.
-    /// Affectors existing this frame at [`PostUpdate`] will be used to generate the navmesh.
+    /// Obstacles existing this frame at [`PostUpdate`] will be used to generate the navmesh.
     pub fn generate(&mut self, settings: NavmeshSettings) -> Handle<Navmesh> {
         let handle = self.navmeshes.reserve_handle();
         let weak_handle = UpgradableAssetId::new(&handle);
@@ -54,7 +54,7 @@ impl<'w> NavmeshGenerator<'w> {
     /// Queue a navmesh regeneration task.
     /// When you call this method, an existing navmesh will be regenerated asynchronously.
     /// Calling it multiple times will have no effect until the regeneration is complete.
-    /// Affectors existing this frame at [`PostUpdate`] will be used to generate the navmesh.
+    /// Obstacles existing this frame at [`PostUpdate`] will be used to generate the navmesh.
     ///
     /// Returns `true` if the regeneration was successfully queued now, `false` if it was already previously queued.
     pub fn regenerate(&mut self, id: &Handle<Navmesh>, settings: NavmeshSettings) -> bool {
@@ -95,13 +95,13 @@ fn drain_queue_into_tasks(world: &mut World) {
             // User dropped the handle in the meantime, no need to process it
             continue;
         };
-        let Some(backend) = world.get_resource::<NavmeshAffectorBackend>() else {
+        let Some(backend) = world.get_resource::<NavmeshBackend>() else {
             #[cfg(feature = "tracing")]
             tracing::error!("Cannot generate navmesh: No backend available");
             return;
         };
-        let affectors = match world.run_system_with(backend.0, input.clone()) {
-            Ok(affectors) => affectors,
+        let obstacles = match world.run_system_with(backend.0, input.clone()) {
+            Ok(obstacles) => obstacles,
             Err(err) => {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Cannot generate navmesh: Backend error: {err}");
@@ -118,7 +118,7 @@ fn drain_queue_into_tasks(world: &mut World) {
             return;
         };
         let thread_pool = AsyncComputeTaskPool::get();
-        let task = thread_pool.spawn(generate_navmesh(affectors.clone(), input));
+        let task = thread_pool.spawn(generate_navmesh(obstacles.clone(), input));
         tasks_queue.insert(handle, task);
     }
 }
@@ -149,14 +149,10 @@ fn poll_tasks(
         };
         // Process the generated navmesh
         navmeshes.insert(strong.id(), navmesh);
+        commands.trigger(NavmeshReady(strong.id()));
     }
     for id in removed_ids {
-        let Some(strong) = id.upgrade() else {
-            continue;
-        };
-        if let Some(_task) = tasks.remove(&id) {
-            commands.trigger(NavmeshReady(strong.id()));
-        }
+        tasks.remove(&id);
     }
 }
 
@@ -164,18 +160,7 @@ fn poll_tasks(
 #[derive(Debug, Event, Deref, DerefMut)]
 pub struct NavmeshReady(pub AssetId<Navmesh>);
 
-async fn generate_navmesh(
-    affectors: Vec<(GlobalTransform, TriMesh)>,
-    settings: NavmeshSettings,
-) -> Result<Navmesh> {
-    let mut trimesh = TriMesh::default();
-    for (transform, mut current_trimesh) in affectors {
-        let transform = transform.compute_transform();
-        for vertex in &mut current_trimesh.vertices {
-            *vertex = transform.transform_point(Vec3::from(*vertex)).into();
-        }
-        trimesh.extend(current_trimesh);
-    }
+async fn generate_navmesh(mut trimesh: TriMesh, settings: NavmeshSettings) -> Result<Navmesh> {
     let up = settings.up;
     match up {
         Vec3::Y => {

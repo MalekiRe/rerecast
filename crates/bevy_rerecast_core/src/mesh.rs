@@ -12,14 +12,14 @@ use rerecast::{AreaType, TriMesh};
 use crate::{NavmeshApp as _, NavmeshSettings};
 
 /// A backend for navmesh generation.
-/// Uses all entities with a [`Mesh3d`] component as navmesh affectors.
+/// Uses all entities with a [`Mesh3d`] component as navmesh obstacles.
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct Mesh3dBackendPlugin;
 
 impl Plugin for Mesh3dBackendPlugin {
     fn build(&self, app: &mut App) {
-        app.set_navmesh_affector_backend(mesh3d_backend);
+        app.set_navmesh_backend(mesh3d_backend);
         app.register_type::<ExcludeMeshFromNavmesh>();
     }
 }
@@ -33,9 +33,9 @@ pub struct ExcludeMeshFromNavmesh;
 fn mesh3d_backend(
     input: In<NavmeshSettings>,
     meshes: Res<Assets<Mesh>>,
-    affectors: Query<(Entity, &GlobalTransform, &Mesh3d), Without<ExcludeMeshFromNavmesh>>,
-) -> Vec<(GlobalTransform, TriMesh)> {
-    affectors
+    obstacles: Query<(Entity, &GlobalTransform, &Mesh3d), Without<ExcludeMeshFromNavmesh>>,
+) -> TriMesh {
+    obstacles
         .iter()
         .filter_map(|(entity, transform, mesh)| {
             if input
@@ -45,12 +45,14 @@ fn mesh3d_backend(
             {
                 return None;
             }
-            let transform = *transform;
-            let mesh = meshes.get(mesh)?;
-            let proxy_mesh = TriMesh::from_mesh(mesh)?;
-            Some((transform, proxy_mesh))
+            let transform = transform.compute_transform();
+            let mesh = meshes.get(mesh)?.clone().transformed_by(transform);
+            TriMesh::from_mesh(&mesh)
         })
-        .collect::<Vec<_>>()
+        .fold(TriMesh::default(), |mut acc, t| {
+            acc.extend(t);
+            acc
+        })
 }
 
 /// Used to add [`TriMeshFromBevyMesh::from_mesh`] to [`TriMesh`].

@@ -3,8 +3,6 @@ use std::collections::HashSet;
 use bevy::{color::palettes::tailwind, prelude::*};
 use bevy_rerecast::{TriMeshFromBevyMesh as _, debug::NavmeshGizmoConfig, rerecast::TriMesh};
 
-use crate::backend::NavmeshAffector;
-
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<GizmosToDraw>();
     app.add_systems(
@@ -12,11 +10,11 @@ pub(super) fn plugin(app: &mut App) {
         (
             draw_poly_mesh.run_if(toggled_gizmo_on(AvailableGizmos::PolyMesh)),
             draw_detail_mesh.run_if(toggled_gizmo_on(AvailableGizmos::DetailMesh)),
-            draw_navmesh_affector.run_if(toggled_gizmo_on(AvailableGizmos::Affector)),
+            draw_obstacles.run_if(toggled_gizmo_on(AvailableGizmos::Obstacles)),
             draw_visual.run_if(toggled_gizmo_on(AvailableGizmos::Visual)),
             hide_poly_mesh.run_if(toggled_gizmo_off(AvailableGizmos::PolyMesh)),
             hide_detail_mesh.run_if(toggled_gizmo_off(AvailableGizmos::DetailMesh)),
-            hide_affector.run_if(toggled_gizmo_off(AvailableGizmos::Affector)),
+            hide_ostacles.run_if(toggled_gizmo_off(AvailableGizmos::Obstacles)),
             hide_visual.run_if(toggled_gizmo_off(AvailableGizmos::Visual)),
         ),
     );
@@ -38,7 +36,7 @@ impl GizmosToDraw {
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub(crate) enum AvailableGizmos {
     Visual,
-    Affector,
+    Obstacles,
     PolyMesh,
     DetailMesh,
 }
@@ -73,12 +71,12 @@ fn draw_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
     config.detail_navmesh.enabled = true;
 }
 
-fn draw_navmesh_affector(
+fn draw_obstacles(
     mut gizmos: ResMut<Assets<GizmoAsset>>,
-    affector: Query<(&Mesh3d, &Gizmo), With<NavmeshAffector>>,
+    obstacles: Query<(&Mesh3d, &Gizmo), With<OstacleGizmo>>,
     meshes: Res<Assets<Mesh>>,
 ) {
-    for (mesh, gizmo) in &affector {
+    for (mesh, gizmo) in &obstacles {
         let Some(gizmo) = gizmos.get_mut(&gizmo.handle) else {
             error!("Failed to get gizmo asset");
             return;
@@ -110,8 +108,8 @@ fn draw_visual(mut visibility: Query<&mut Visibility, With<VisualMesh>>) {
     }
 }
 
-fn hide_affector(
-    gizmo_handles: Query<&Gizmo, With<NavmeshAffector>>,
+fn hide_ostacles(
+    gizmo_handles: Query<&Gizmo, With<OstacleGizmo>>,
     mut gizmos: ResMut<Assets<GizmoAsset>>,
 ) {
     for gizmo in &gizmo_handles {
@@ -139,3 +137,6 @@ fn hide_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
 
 #[derive(Component)]
 pub(crate) struct VisualMesh;
+
+#[derive(Component)]
+pub(crate) struct OstacleGizmo;

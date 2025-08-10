@@ -47,16 +47,16 @@ impl Heightfield {
         let inverse_cell_size = 1.0 / self.cell_size;
         let inverse_cell_height = 1.0 / self.cell_height;
 
-        let w = self.width as i16;
-        let h = self.height as i16;
+        let w = self.width as i32;
+        let h = self.height as i32;
         // The height of the heightfield AABB
         let by = self.aabb.max[1] - self.aabb.min[1];
 
         // Calculate the footprint of the triangle on the grid's z-axis
         // z0 is the first z cell that the triangle touches
         // z1 is the last z cell that the triangle touches
-        let z0 = ((aabb.min[2] - self.aabb.min[2]) * inverse_cell_size) as i16;
-        let z1 = ((aabb.max[2] - self.aabb.min[2]) * inverse_cell_size) as i16;
+        let z0 = ((aabb.min[2] - self.aabb.min[2]) * inverse_cell_size) as i32;
+        let z1 = ((aabb.max[2] - self.aabb.min[2]) * inverse_cell_size) as i32;
 
         // use -1 rather than 0 to cut the polygon properly at the start of the tile
         let z0 = z0.clamp(-1, h - 1);
@@ -107,8 +107,8 @@ impl Heightfield {
                 min_x = min_x.min(in_row[i as usize].x);
                 max_x = max_x.max(in_row[i as usize].x);
             }
-            let x0 = ((min_x - self.aabb.min[0]) * inverse_cell_size) as i16;
-            let x1 = ((max_x - self.aabb.min[0]) * inverse_cell_size) as i16;
+            let x0 = ((min_x - self.aabb.min[0]) * inverse_cell_size) as i32;
+            let x1 = ((max_x - self.aabb.min[0]) * inverse_cell_size) as i32;
             if x1 < 0 || x0 >= w {
                 continue;
             }
