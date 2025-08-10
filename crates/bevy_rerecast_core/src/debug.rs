@@ -406,7 +406,7 @@ impl FromWorld for GizmoHandles {
                     unlit: true,
                     double_sided: true,
                     alpha_mode: AlphaMode::Blend,
-                    depth_bias: -0.001,
+                    depth_bias: -0.003,
                     ..Default::default()
                 },
             ),
@@ -416,7 +416,7 @@ impl FromWorld for GizmoHandles {
                     unlit: true,
                     double_sided: true,
                     alpha_mode: AlphaMode::Blend,
-                    depth_bias: -0.001,
+                    depth_bias: -0.004,
                     ..Default::default()
                 },
             ),
@@ -444,7 +444,7 @@ impl Default for NavmeshGizmoConfig {
                     width: 6.0,
                     ..Default::default()
                 },
-                depth_bias: -0.002,
+                depth_bias: -0.001,
                 ..Default::default()
             },
             detail_navmesh: GizmoConfig {
