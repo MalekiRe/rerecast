@@ -4,9 +4,11 @@ use core::str::FromStr;
 
 use bevy_app::prelude::*;
 use bevy_asset::{prelude::*, uuid::Uuid};
+use bevy_camera::visibility::InheritedVisibility;
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
 use bevy_image::Image;
+use bevy_mesh::{Mesh, Mesh3d};
 use bevy_pbr::{MeshMaterial3d, StandardMaterial};
 use bevy_platform::collections::HashMap;
 use bevy_remote::{BrpError, BrpResult, RemoteMethodSystemId, RemoteMethods};

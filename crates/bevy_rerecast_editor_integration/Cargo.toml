@@ -36,7 +36,9 @@ bevy_derive = { workspace = true }
 bevy_math = { workspace = true }
 bevy_color = { workspace = true }
 bevy_platform = { workspace = true }
+bevy_camera = { workspace = true }
 bevy_tasks = { workspace = true }
+bevy_mesh = { workspace = true }
 bevy_image = { workspace = true }
 
 tracing = { workspace = true }

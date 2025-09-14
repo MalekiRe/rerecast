@@ -14,9 +14,12 @@ readme = { workspace = true }
 bevy_ecs = { workspace = true, features = ["bevy_reflect", "serialize"] }
 bevy_transform = { workspace = true, features = ["bevy-support"] }
 bevy_tasks = { workspace = true }
+bevy_camera = { workspace = true }
+bevy_light = { workspace = true }
 bevy_derive = { workspace = true }
 bevy_reflect = { workspace = true }
 bevy_app = { workspace = true }
+bevy_utils = { workspace = true }
 bevy_math = { workspace = true, features = ["bevy_reflect", "serialize"] }
 bevy_platform = { workspace = true }
 
@@ -54,6 +57,7 @@ std = [
     "bevy_math/std",
     "bevy_platform/std",
     "bevy_color?/std",
+    "bevy_utils/std",
     "serde/std",
     "anyhow/std",
     "tracing?/std",

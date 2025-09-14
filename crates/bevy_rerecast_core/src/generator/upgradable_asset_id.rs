@@ -22,7 +22,7 @@ impl<T: Asset> UpgradableAssetId<T> {
         let id = handle.id();
         let handle = match handle {
             Handle::Strong(arc) => Arc::downgrade(arc),
-            Handle::Weak(_id) => panic!("AssetIDs are not supported"),
+            Handle::Uuid(..) => panic!("UUID IDs are not supported"),
         };
         Self { id, handle }
     }

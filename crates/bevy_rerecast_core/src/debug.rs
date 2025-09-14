@@ -2,13 +2,15 @@
 use alloc::vec::Vec;
 use bevy_app::prelude::*;
 use bevy_asset::{RenderAssetUsages, prelude::*};
+use bevy_camera::{prelude::*, visibility::RenderLayers};
 use bevy_color::{Alpha as _, palettes::tailwind};
-use bevy_ecs::{component::HookContext, prelude::*, world::DeferredWorld};
+use bevy_ecs::{lifecycle::HookContext, prelude::*, world::DeferredWorld};
 use bevy_gizmos::prelude::*;
-use bevy_mesh::{Indices, Mesh, PrimitiveTopology};
-use bevy_pbr::{NotShadowCaster, NotShadowReceiver, prelude::*};
+use bevy_light::{NotShadowCaster, NotShadowReceiver};
+use bevy_mesh::{Indices, Mesh, Mesh3d, PrimitiveTopology};
+use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
-use bevy_render::{prelude::*, view::RenderLayers};
+use bevy_render::prelude::*;
 use glam::vec3;
 use rerecast::PolygonNavmesh;
 

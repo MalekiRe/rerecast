@@ -2300,10 +2300,12 @@ dependencies = [
  "anyhow",
  "bevy_app 0.17.0-rc.1",
  "bevy_asset 0.17.0-rc.1",
+ "bevy_camera",
  "bevy_color 0.17.0-rc.1",
  "bevy_derive 0.17.0-rc.1",
  "bevy_ecs 0.17.0-rc.1",
  "bevy_gizmos 0.17.0-rc.1",
+ "bevy_light",
  "bevy_math 0.17.0-rc.1",
  "bevy_mesh 0.17.0-rc.1",
  "bevy_pbr 0.17.0-rc.1",
@@ -2312,9 +2314,10 @@ dependencies = [
  "bevy_render 0.17.0-rc.1",
  "bevy_tasks 0.17.0-rc.1",
  "bevy_transform 0.17.0-rc.1",
+ "bevy_utils 0.17.0-rc.1",
  "bincode",
  "critical-section",
- "glam 0.29.3",
+ "glam 0.30.5",
  "rerecast",
  "serde",
  "thiserror 2.0.16",
@@ -2345,11 +2348,13 @@ dependencies = [
  "base64 0.22.1",
  "bevy_app 0.17.0-rc.1",
  "bevy_asset 0.17.0-rc.1",
+ "bevy_camera",
  "bevy_color 0.17.0-rc.1",
  "bevy_derive 0.17.0-rc.1",
  "bevy_ecs 0.17.0-rc.1",
  "bevy_image 0.17.0-rc.1",
  "bevy_math 0.17.0-rc.1",
+ "bevy_mesh 0.17.0-rc.1",
  "bevy_pbr 0.17.0-rc.1",
  "bevy_platform 0.17.0-rc.1",
  "bevy_reflect 0.17.0-rc.1",
@@ -2365,7 +2370,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.16",
  "tracing",
- "wgpu-types 24.0.0",
+ "wgpu-types 26.0.0",
 ]
 
 [[package]]
@@ -6497,12 +6502,12 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
 name = "rerecast"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "bevy_reflect 0.17.0-rc.1",
  "bitflags 2.9.4",
- "glam 0.29.3",
+ "glam 0.30.5",
  "libm",
  "serde",
  "serde_json",
@@ -7263,7 +7268,7 @@ name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "approxim",
- "glam 0.29.3",
+ "glam 0.30.5",
  "rerecast",
  "serde",
  "serde_json",

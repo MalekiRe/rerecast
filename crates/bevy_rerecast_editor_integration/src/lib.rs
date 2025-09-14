@@ -32,12 +32,12 @@ impl Plugin for NavmeshEditorIntegrationPlugin {
 
 #[cfg(feature = "debug_plugin")]
 fn exclude_polygon_gizmo(trigger: Trigger<OnAdd, PolygonNavmeshGizmo>, mut commands: Commands) {
-    commands.entity(trigger.target()).insert(EditorExluded);
+    commands.entity(trigger.entity).insert(EditorExluded);
 }
 
 #[cfg(feature = "debug_plugin")]
 fn exclude_detail_gizmo(trigger: Trigger<OnAdd, DetailNavmeshGizmo>, mut commands: Commands) {
-    commands.entity(trigger.target()).insert(EditorExluded);
+    commands.entity(trigger.entity).insert(EditorExluded);
 }
 
 /// Component used to mark [`Mesh3d`](bevy_render::mesh::Mesh3d)es so that they're not sent to the editor for previewing the level.
