@@ -116,7 +116,7 @@ fn generate_navmesh(
 }
 
 fn configure_camera(
-    trigger: Trigger<OnAdd, Camera>,
+    trigger: On<Add, Camera>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {

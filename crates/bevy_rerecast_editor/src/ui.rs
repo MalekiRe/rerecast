@@ -188,12 +188,12 @@ fn read_config_inputs(
 #[derive(Component)]
 struct LoadSceneModal;
 
-fn build_navmesh(_: Trigger<Pointer<Click>>, mut commands: Commands) {
+fn build_navmesh(_: On<Pointer<Click>>, mut commands: Commands) {
     commands.trigger(BuildNavmesh);
 }
 
 fn save_navmesh(
-    _: Trigger<Pointer<Click>>,
+    _: On<Pointer<Click>>,
     mut commands: Commands,
     maybe_task: Option<Res<SaveTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -219,7 +219,7 @@ fn save_navmesh(
 }
 
 fn load_navmesh(
-    _: Trigger<Pointer<Click>>,
+    _: On<Pointer<Click>>,
     mut commands: Commands,
     maybe_task: Option<Res<LoadTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -244,7 +244,7 @@ fn load_navmesh(
     commands.insert_resource(LoadTask(task));
 }
 
-fn spawn_load_scene_modal(_: Trigger<Pointer<Click>>, mut commands: Commands) {
+fn spawn_load_scene_modal(_: On<Pointer<Click>>, mut commands: Commands) {
     commands.spawn((
         Name::new("Backdrop"),
         Node {
@@ -326,7 +326,7 @@ fn modal_text(text: impl Into<String>) -> impl Bundle {
     )
 }
 
-fn load_scene(_: Trigger<Pointer<Click>>, mut commands: Commands) {
+fn load_scene(_: On<Pointer<Click>>, mut commands: Commands) {
     commands.trigger(CloseModal);
     commands.trigger(GetNavmeshInput);
 }
@@ -335,14 +335,14 @@ fn load_scene(_: Trigger<Pointer<Click>>, mut commands: Commands) {
 struct CloseModal;
 
 fn close_modal(
-    _: Trigger<CloseModal>,
+    _: On<CloseModal>,
     mut commands: Commands,
     modal: Single<Entity, With<LoadSceneModal>>,
 ) {
     commands.entity(*modal).try_despawn();
 }
 
-fn close_load_scene(_: Trigger<Pointer<Click>>, mut commands: Commands) {
+fn close_load_scene(_: On<Pointer<Click>>, mut commands: Commands) {
     commands.trigger(CloseModal);
 }
 
@@ -356,7 +356,7 @@ fn status_bar_text(text: impl Into<String>) -> impl Bundle {
 
 fn toggle_gizmo(gizmo: AvailableGizmos) -> impl ObserverSystem<Pointer<Click>, (), ()> {
     IntoSystem::into_system(
-        move |_: Trigger<Pointer<Click>>, mut gizmos: ResMut<GizmosToDraw>| {
+        move |_: On<Pointer<Click>>, mut gizmos: ResMut<GizmosToDraw>| {
             gizmos.toggle(gizmo);
         },
     )

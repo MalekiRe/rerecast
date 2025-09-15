@@ -4,14 +4,15 @@ use std::time::Instant;
 
 use bevy::{
     asset::AssetPlugin,
+    camera::{primitives::Aabb, view::VisibilityPlugin},
     ecs::system::RunSystemOnce,
     gltf::GltfPlugin,
     log::LogPlugin,
+    math::bounding::Aabb3d,
     prelude::*,
-    render::{mesh::MeshPlugin, primitives::Aabb, view::VisibilityPlugin},
+    render::mesh::MeshPlugin,
     scene::{SceneInstanceReady, ScenePlugin},
 };
-use bevy_math::bounding::Aabb3d;
 use bevy_rerecast::{Mesh3dBackendPlugin, debug::NavmeshDebugPlugin, prelude::*};
 use bevy_rerecast_editor_integration::NavmeshEditorIntegrationPlugin;
 
@@ -20,7 +21,7 @@ fn gltf_generation() {
     let mut app = App::new_test();
     let gltf_handle = app.world().load_asset("models/dungeon.glb#Scene0");
     app.world_mut().spawn(SceneRoot(gltf_handle)).observe(
-        |_: Trigger<SceneInstanceReady>, mut commands: Commands| {
+        |_: On<SceneInstanceReady>, mut commands: Commands| {
             commands.insert_resource(GltfLoaded);
         },
     );
@@ -162,7 +163,7 @@ impl TestApp for App {
 
         app.finish();
         app.cleanup();
-        app.add_observer(|trigger: Trigger<NavmeshReady>, mut commands: Commands| {
+        app.add_observer(|trigger: On<NavmeshReady>, mut commands: Commands| {
             commands.insert_resource(NavmeshReadyResource(trigger.event().0));
         });
         app

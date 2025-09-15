@@ -148,7 +148,12 @@ fn poll_tasks(
             }
         };
         // Process the generated navmesh
-        navmeshes.insert(strong.id(), navmesh);
+        if let Err(err) = navmeshes.insert(strong.id(), navmesh) {
+            #[cfg(feature = "tracing")]
+            tracing::error!("Failed to insert navmesh: {err}");
+            let _ = err;
+            continue;
+        }
         commands.trigger(NavmeshReady(strong.id()));
     }
     for id in removed_ids {

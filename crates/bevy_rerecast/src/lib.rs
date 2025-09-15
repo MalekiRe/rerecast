@@ -84,7 +84,7 @@
 //! use bevy::prelude::*;
 //! use bevy_rerecast::prelude::*;
 //!
-//! fn on_navmesh_ready(trigger: Trigger<NavmeshReady>, navmeshes: Res<Assets<Navmesh>>) {
+//! fn on_navmesh_ready(trigger: On<NavmeshReady>, navmeshes: Res<Assets<Navmesh>>) {
 //!     let asset_id = trigger.event().0;
 //!
 //!     // We can now safely fetch the navmesh from our assets:

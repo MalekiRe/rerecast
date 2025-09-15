@@ -74,7 +74,7 @@ fn mark_gizmos_dirty_on_config_change(
 
 fn mark_gizmos_dirty_on_asset_change(
     mut commands: Commands,
-    mut asset_events: EventReader<AssetEvent<Navmesh>>,
+    mut asset_events: MessageReader<AssetEvent<Navmesh>>,
     polygon_gizmos: Query<(Entity, &PolygonNavmeshGizmo)>,
     detail_gizmos: Query<(Entity, &DetailNavmeshGizmo)>,
 ) {

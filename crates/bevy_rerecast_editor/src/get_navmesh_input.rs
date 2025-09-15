@@ -43,7 +43,7 @@ enum GetNavmeshInputRequestTask {
 }
 
 fn generate_navmesh_input(
-    _: Trigger<GetNavmeshInput>,
+    _: On<GetNavmeshInput>,
     mut commands: Commands,
     settings: Res<GlobalNavmeshSettings>,
     maybe_task: Option<Res<GetNavmeshInputRequestTask>>,

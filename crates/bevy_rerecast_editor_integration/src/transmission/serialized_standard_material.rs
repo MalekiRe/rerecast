@@ -1,6 +1,6 @@
 use bevy_asset::{Assets, Handle};
 use bevy_color::prelude::*;
-use bevy_image::Image;
+use bevy_image::{Image, SerializedImage};
 use bevy_math::Affine2;
 use bevy_pbr::{OpaqueRendererMethod, UvChannel, prelude::*};
 use bevy_platform::collections::HashMap;
@@ -8,8 +8,6 @@ use bevy_render::alpha::AlphaMode;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use wgpu_types::Face;
-
-use crate::transmission::SerializedImage;
 
 /// Serialized representation of a [`StandardMaterial`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
