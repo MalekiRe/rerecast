@@ -41,13 +41,13 @@ pub(crate) enum AvailableGizmos {
     DetailMesh,
 }
 
-fn toggled_gizmo_on(gizmo: AvailableGizmos) -> impl Condition<()> {
+fn toggled_gizmo_on(gizmo: AvailableGizmos) -> impl SystemCondition<()> {
     IntoSystem::into_system(move |gizmos: Res<GizmosToDraw>| {
         gizmos.is_changed() && gizmos.contains(&gizmo)
     })
 }
 
-fn toggled_gizmo_off(gizmo: AvailableGizmos) -> impl Condition<()> {
+fn toggled_gizmo_off(gizmo: AvailableGizmos) -> impl SystemCondition<()> {
     IntoSystem::into_system(move |gizmos: Res<GizmosToDraw>| {
         gizmos.is_changed() && !gizmos.contains(&gizmo)
     })

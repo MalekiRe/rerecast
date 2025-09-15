@@ -1,10 +1,10 @@
 use anyhow::anyhow;
 use bevy::{
     asset::RenderAssetUsages,
+    mesh::{Indices, PrimitiveTopology},
     platform::collections::HashMap,
     prelude::*,
     remote::BrpRequest,
-    render::mesh::{Indices, PrimitiveTopology},
     tasks::{AsyncComputeTaskPool, IoTaskPool, Task, futures_lite::future},
 };
 use bevy_rerecast::editor_integration::{

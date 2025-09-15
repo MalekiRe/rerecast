@@ -10,7 +10,7 @@ use alloc::fmt;
 use bevy::{
     input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll, MouseScrollUnit},
     prelude::*,
-    window::CursorGrabMode,
+    window::{CursorGrabMode, CursorOptions},
 };
 use core::f32::consts::*;
 
@@ -128,7 +128,7 @@ Freecam Controls:
 
 fn run_camera_controller(
     time: Res<Time>,
-    mut windows: Query<&mut Window>,
+    mut windows: Query<(&Window, &mut CursorOptions)>,
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
     accumulated_mouse_scroll: Res<AccumulatedMouseScroll>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
@@ -232,18 +232,18 @@ fn run_camera_controller(
     // Handle cursor grab
     if cursor_grab_change {
         if cursor_grab {
-            for mut window in &mut windows {
+            for (window, mut cursor_options) in &mut windows {
                 if !window.focused {
                     continue;
                 }
 
-                window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                window.cursor_options.visible = false;
+                cursor_options.grab_mode = CursorGrabMode::Locked;
+                cursor_options.visible = false;
             }
         } else {
-            for mut window in &mut windows {
-                window.cursor_options.grab_mode = CursorGrabMode::None;
-                window.cursor_options.visible = true;
+            for (_window, mut cursor_options) in &mut windows {
+                cursor_options.grab_mode = CursorGrabMode::None;
+                cursor_options.visible = true;
             }
         }
     }
