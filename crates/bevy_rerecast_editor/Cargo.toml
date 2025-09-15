@@ -13,7 +13,7 @@ readme = { workspace = true }
 [dependencies]
 bevy = { workspace = true, features = [
     "bevy_remote",
-    "wayland",
+    "experimental_bevy_feathers",
 ] }
 bevy_rerecast = { workspace = true, default-features = true }
 serde_json = { workspace = true }

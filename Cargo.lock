@@ -1227,6 +1227,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_feathers"
+version = "0.17.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0e9245be8c1d0a0f71eae5a7894ac7329fa5ee3469f8f3766a2508fa5f72493"
+dependencies = [
+ "accesskit 0.21.0",
+ "bevy_a11y 0.17.0-rc.1",
+ "bevy_app 0.17.0-rc.1",
+ "bevy_asset 0.17.0-rc.1",
+ "bevy_camera",
+ "bevy_color 0.17.0-rc.1",
+ "bevy_ecs 0.17.0-rc.1",
+ "bevy_input_focus 0.17.0-rc.1",
+ "bevy_log 0.17.0-rc.1",
+ "bevy_math 0.17.0-rc.1",
+ "bevy_picking 0.17.0-rc.1",
+ "bevy_platform 0.17.0-rc.1",
+ "bevy_reflect 0.17.0-rc.1",
+ "bevy_render 0.17.0-rc.1",
+ "bevy_shader",
+ "bevy_text 0.17.0-rc.1",
+ "bevy_ui 0.17.0-rc.1",
+ "bevy_ui_render",
+ "bevy_ui_widgets",
+ "bevy_window 0.17.0-rc.1",
+ "smol_str",
+]
+
+[[package]]
 name = "bevy_fix_gltf_coordinate_system"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1614,6 +1643,7 @@ dependencies = [
  "bevy_derive 0.17.0-rc.1",
  "bevy_diagnostic 0.17.0-rc.1",
  "bevy_ecs 0.17.0-rc.1",
+ "bevy_feathers",
  "bevy_gilrs 0.17.0-rc.1",
  "bevy_gizmos 0.17.0-rc.1",
  "bevy_gltf 0.17.0-rc.1",
@@ -1643,6 +1673,7 @@ dependencies = [
  "bevy_transform 0.17.0-rc.1",
  "bevy_ui 0.17.0-rc.1",
  "bevy_ui_render",
+ "bevy_ui_widgets",
  "bevy_utils 0.17.0-rc.1",
  "bevy_window 0.17.0-rc.1",
  "bevy_winit 0.17.0-rc.1",
@@ -2907,6 +2938,25 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "bevy_ui_widgets"
+version = "0.17.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "366f322a3e60d0cb9c7c0999d2c0401c9ddee365a269f77bdd61a00eb0574bed"
+dependencies = [
+ "accesskit 0.21.0",
+ "bevy_a11y 0.17.0-rc.1",
+ "bevy_app 0.17.0-rc.1",
+ "bevy_ecs 0.17.0-rc.1",
+ "bevy_input 0.17.0-rc.1",
+ "bevy_input_focus 0.17.0-rc.1",
+ "bevy_log 0.17.0-rc.1",
+ "bevy_math 0.17.0-rc.1",
+ "bevy_picking 0.17.0-rc.1",
+ "bevy_reflect 0.17.0-rc.1",
+ "bevy_ui 0.17.0-rc.1",
 ]
 
 [[package]]

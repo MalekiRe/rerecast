@@ -1,6 +1,6 @@
 //! The editor for the Navmesh plugin.
 
-use bevy::{ecs::error::warn, prelude::*};
+use bevy::{ecs::error::warn, feathers::FeathersPlugins, prelude::*, winit::WinitPlugin};
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::TextInputPlugin;
 
@@ -18,7 +18,16 @@ mod visualization;
 fn main() -> AppExit {
     App::new()
         .set_error_handler(warn)
-        .add_plugins(DefaultPlugins)
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Rerecast Navmesh Editor".to_string(),
+                    ..default()
+                }),
+                ..default()
+            }),
+            FeathersPlugins,
+        ))
         .add_plugins((NavmeshPlugins::default(), TextInputPlugin))
         .add_plugins((
             camera::plugin,

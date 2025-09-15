@@ -312,7 +312,7 @@ fn modal_title(text: impl Into<String>) -> impl Bundle {
             ..default()
         },
         Text::new(text),
-        TextLayout::new_with_justify(JustifyText::Center),
+        TextLayout::new_with_justify(Justify::Center),
         TextFont::from_font_size(17.0),
         TextColor(Color::BLACK),
     )
