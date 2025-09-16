@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use bevy::{
     asset::AssetPlugin,
-    camera::{primitives::Aabb, view::VisibilityPlugin},
+    camera::{primitives::Aabb, visibility::VisibilityPlugin},
     ecs::system::RunSystemOnce,
     gltf::GltfPlugin,
     log::LogPlugin,
@@ -131,7 +131,10 @@ impl TestApp for App {
         }
     }
     fn read_navmesh(&mut self, path: &str) -> Navmesh {
-        let expected_navmesh: Handle<Navmesh> = self.world().resource::<AssetServer>().load(path);
+        let expected_navmesh: Handle<Navmesh> = self
+            .world()
+            .resource::<AssetServer>()
+            .load(path.to_string());
         let now = Instant::now();
         loop {
             self.update();
