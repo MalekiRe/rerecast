@@ -546,51 +546,22 @@ version = "0.3.0"
 source = "git+https://github.com/Jondolf/avian?branch=bevy-0.17#2d09db4f05386f9459ee613309d983e2a8076e5e"
 dependencies = [
  "approx",
- "avian_derive 0.2.2 (git+https://github.com/Jondolf/avian?branch=bevy-0.17)",
+ "avian_derive",
  "bevy 0.17.0-rc.1",
- "bevy_heavy 0.2.0 (git+https://github.com/Jondolf/bevy_heavy.git)",
+ "bevy_heavy",
  "bevy_math 0.17.0-rc.1",
- "bevy_transform_interpolation 0.2.0 (git+https://github.com/Jondolf/bevy_transform_interpolation)",
+ "bevy_transform_interpolation",
  "bitflags 2.9.4",
  "derive_more 1.0.0",
  "disqualified",
  "glam_matrix_extensions",
  "itertools 0.13.0",
- "nalgebra 0.34.0",
- "parry3d 0.24.0",
+ "nalgebra",
+ "parry3d",
+ "parry3d-f64",
  "smallvec",
  "thiserror 2.0.16",
-]
-
-[[package]]
-name = "avian3d"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0feaf6ed522e3e55130d820bfa2a3f3395092cbee2c986cfc1a464b60b50b4ca"
-dependencies = [
- "avian_derive 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy 0.16.1",
- "bevy_heavy 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_math 0.16.1",
- "bevy_transform_interpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 2.9.4",
- "derive_more 1.0.0",
- "itertools 0.13.0",
- "parry3d 0.17.6",
- "parry3d-f64",
  "thread_local",
-]
-
-[[package]]
-name = "avian_derive"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12b257f601a1535e0d4a7a7796f535e3a13de62fd422b16dff7c14d27f0d4048"
-dependencies = [
- "proc-macro-error2",
- "proc-macro2",
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]
@@ -608,7 +579,7 @@ dependencies = [
 name = "avian_rerecast"
 version = "0.3.0-rc.0"
 dependencies = [
- "avian3d 0.3.0",
+ "avian3d",
  "bevy_app 0.17.0-rc.1",
  "bevy_ecs 0.17.0-rc.1",
  "bevy_math 0.17.0-rc.1",
@@ -1466,16 +1437,6 @@ dependencies = [
  "smallvec",
  "thiserror 2.0.16",
  "tracing",
-]
-
-[[package]]
-name = "bevy_heavy"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34ccc861fea2ff58c67f4df119512e204050bd7631a3a9c65e1a5e9d162cce28"
-dependencies = [
- "bevy_math 0.16.1",
- "bevy_reflect 0.16.1",
 ]
 
 [[package]]
@@ -2804,15 +2765,6 @@ dependencies = [
 [[package]]
 name = "bevy_transform_interpolation"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72c7c6c4e6a3d5415b3a29a17bd20c17cd0e2f068b96b24e263316d58d5346ea"
-dependencies = [
- "bevy 0.16.1",
-]
-
-[[package]]
-name = "bevy_transform_interpolation"
-version = "0.2.0"
 source = "git+https://github.com/Jondolf/bevy_transform_interpolation#b7b76f6cf644407aa9ee9fbcb5f03b4dd204b4d3"
 dependencies = [
  "bevy 0.17.0-rc.1",
@@ -2821,11 +2773,11 @@ dependencies = [
 [[package]]
 name = "bevy_trenchbroom"
 version = "0.9.3"
-source = "git+https://github.com/Noxmore/bevy_trenchbroom?branch=bevy-0.17#f080e9f1fe60a736c8f20313d2e3679ec7b93b2c"
+source = "git+https://github.com/Noxmore/bevy_trenchbroom?branch=bevy-0.17#427dc4ff8e961919f48d9848457fcc386c18bfe1"
 dependencies = [
  "anyhow",
  "atomicow",
- "avian3d 0.3.1",
+ "avian3d",
  "bevy 0.17.0-rc.1",
  "bevy_materialize",
  "bevy_mesh 0.17.0-rc.1",
@@ -2852,7 +2804,7 @@ dependencies = [
 [[package]]
 name = "bevy_trenchbroom_macros"
 version = "0.9.3"
-source = "git+https://github.com/Noxmore/bevy_trenchbroom?branch=bevy-0.17#f080e9f1fe60a736c8f20313d2e3679ec7b93b2c"
+source = "git+https://github.com/Noxmore/bevy_trenchbroom?branch=bevy-0.17#427dc4ff8e961919f48d9848457fcc386c18bfe1"
 dependencies = [
  "deluxe",
  "heck 0.5.0",
@@ -5495,21 +5447,6 @@ dependencies = [
 
 [[package]]
 name = "nalgebra"
-version = "0.33.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26aecdf64b707efd1310e3544d709c5c0ac61c13756046aaaba41be5c4f66a3b"
-dependencies = [
- "approx",
- "matrixmultiply",
- "num-complex",
- "num-rational",
- "num-traits",
- "simba",
- "typenum",
-]
-
-[[package]]
-name = "nalgebra"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cd59afb6639828b33677758314a4a1a745c15c02bc597095b851c8fd915cf49"
@@ -6189,33 +6126,6 @@ dependencies = [
 
 [[package]]
 name = "parry3d"
-version = "0.17.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aeb9659a05b1783fb2e9bc94f48225ae5b40817eb45b62569c0e4dd767a6e51"
-dependencies = [
- "approx",
- "arrayvec",
- "bitflags 2.9.4",
- "downcast-rs 1.2.1",
- "either",
- "ena",
- "log",
- "nalgebra 0.33.2",
- "num-derive",
- "num-traits",
- "ordered-float 4.6.0",
- "rayon",
- "rstar",
- "rustc-hash 2.1.1",
- "simba",
- "slab",
- "smallvec",
- "spade",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "parry3d"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29a58098398ec9b65abcd8c04501430bd273e3bb48ef3664d4d4e0eb7a44029d"
@@ -6229,10 +6139,11 @@ dependencies = [
  "foldhash 0.2.0",
  "hashbrown 0.16.0",
  "log",
- "nalgebra 0.34.0",
+ "nalgebra",
  "num-derive",
  "num-traits",
  "ordered-float 5.0.0",
+ "rayon",
  "rstar",
  "simba",
  "slab",
@@ -6244,29 +6155,30 @@ dependencies = [
 
 [[package]]
 name = "parry3d-f64"
-version = "0.17.6"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4484c8ad93ff03c0e57aa1a4f3ff5406ab6301a1eb838ef6dea90e94f00a6c7"
+checksum = "93bfd7cfba14c8b6e28995966e8302fa4ec374023f96e6ca920e599d7851fe90"
 dependencies = [
  "approx",
  "arrayvec",
  "bitflags 2.9.4",
- "downcast-rs 1.2.1",
+ "downcast-rs 2.0.2",
  "either",
  "ena",
+ "foldhash 0.2.0",
+ "hashbrown 0.16.0",
  "log",
- "nalgebra 0.33.2",
+ "nalgebra",
  "num-derive",
  "num-traits",
- "ordered-float 4.6.0",
+ "ordered-float 5.0.0",
  "rayon",
  "rstar",
- "rustc-hash 2.1.1",
  "simba",
  "slab",
  "smallvec",
  "spade",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
@@ -6763,7 +6675,7 @@ dependencies = [
 name = "rerecast_examples"
 version = "0.1.0"
 dependencies = [
- "avian3d 0.3.0",
+ "avian3d",
  "avian_rerecast",
  "bevy 0.17.0-rc.1",
  "bevy_rerecast",
