@@ -1,6 +1,8 @@
 //! The editor for the Navmesh plugin.
 
-use bevy::{ecs::error::warn, feathers::FeathersPlugins, prelude::*};
+use bevy::{
+    ecs::error::warn, feathers::FeathersPlugins, input_focus::InputDispatchPlugin, prelude::*,
+};
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::TextInputPlugin;
 
@@ -26,7 +28,8 @@ fn main() -> AppExit {
                 }),
                 ..default()
             }),
-            FeathersPlugins,
+            // InputDispatchPlugin is also added by TextInputPlugin
+            FeathersPlugins.build().disable::<InputDispatchPlugin>(),
         ))
         .add_plugins((NavmeshPlugins::default(), TextInputPlugin))
         .add_plugins((
