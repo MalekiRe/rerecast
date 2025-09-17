@@ -1,15 +1,23 @@
 use bevy::{
-    color::palettes::{css::NAVY, tailwind},
+    color::palettes::tailwind,
     ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
-    feathers::{self, controls::ButtonProps, theme::ThemedText},
+    feathers::{
+        self,
+        controls::{ButtonProps, ButtonVariant},
+        theme::ThemedText,
+    },
     prelude::*,
     tasks::prelude::*,
-    ui::Val::*,
+    ui::{InteractionDisabled, Val::*},
     ui_widgets::{Activate, Callback},
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
-use bevy_ui_text_input::{TextInputContents, TextInputMode, TextInputNode, TextInputPrompt};
+use bevy_ui_text_input::{
+    TextInputBuffer, TextInputContents, TextInputMode, TextInputNode, TextInputPrompt,
+    TextInputQueue,
+    actions::{TextInputAction, TextInputEdit},
+};
 
 use rfd::AsyncFileDialog;
 
@@ -72,58 +80,88 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         },
                         TextInputNode {
                             mode: TextInputMode::SingleLine,
-                            max_chars: Some(20),
-                            clear_on_submit: true,
+                            clear_on_submit: false,
                             ..Default::default()
                         },
-                        TextInputPrompt::default(),
-                        BackgroundColor(NAVY.into())
+                        TextFont {
+                            font_size: 18.0,
+                            ..default()
+                        },
+                        text_input_queue("http://127.0.0.1:15702"),
                     ),
-                    feathers::controls::button(
+                    menu_button(feathers::controls::button(
                         ButtonProps {
                             on_click: Callback::System(
                                 commands.register_system(spawn_load_scene_modal)
                             ),
+                            variant: ButtonVariant::Primary,
                             ..default()
                         },
                         (),
                         Spawn((Text::new("Load Scene"), ThemedText))
-                    ),
-                    feathers::controls::button(
+                    )),
+                    hspace(px(10)),
+                    menu_button(feathers::controls::button(
                         ButtonProps {
                             on_click: Callback::System(commands.register_system(build_navmesh)),
                             ..default()
                         },
-                        (),
-                        Spawn((Text::new("Build Navmesh"), ThemedText))
-                    ),
-                    feathers::controls::button(
+                        InteractionDisabled,
+                        Spawn((Text::new("Build"), ThemedText))
+                    )),
+                    menu_button(feathers::controls::button(
                         ButtonProps {
                             on_click: Callback::System(commands.register_system(save_navmesh)),
                             ..default()
                         },
-                        (),
+                        InteractionDisabled,
                         Spawn((Text::new("Save"), ThemedText))
-                    ),
-                    feathers::controls::button(
+                    )),
+                    menu_button(feathers::controls::button(
                         ButtonProps {
                             on_click: Callback::System(commands.register_system(load_navmesh)),
                             ..default()
                         },
-                        (),
-                        Spawn((Text::new("Load Navmesh"), ThemedText))
-                    ),
+                        InteractionDisabled,
+                        Spawn((Text::new("Load"), ThemedText))
+                    )),
                 ]
             ),
             (
                 Name::new("Property Panel"),
                 Node {
-                    width: Px(300.0),
+                    width: px(300),
                     justify_self: JustifySelf::End,
                     flex_direction: FlexDirection::Column,
+                    display: Display::Grid,
+                    grid_template_columns: vec![
+                        // Menu bar
+                        RepeatedGridTrack::auto(2),
+                    ],
+                    column_gap: px(8),
                     padding: UiRect::all(Px(30.0)),
+                    align_content: AlignContent::Start,
                     ..default()
                 },
+                children![
+                    (
+                        Node {
+                            justify_self: JustifySelf::End,
+                            ..default()
+                        },
+                        Text::new("First")
+                    ),
+                    Text::new("Second"),
+                    (
+                        Node {
+                            justify_self: JustifySelf::End,
+                            ..default()
+                        },
+                        Text::new("Thitttrd")
+                    ),
+                    Text::new("Fourth")
+                ],
+                /*
                 Children::spawn(SpawnWith(|parent: &mut RelatedSpawner<ChildOf>| {
                     parent.spawn(checkbox(
                         "Show Visual",
@@ -168,7 +206,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         GlobalNavmeshSettings::default().walkable_climb,
                         WalkableClimbInput,
                     ));
-                })),
+                }))*/
                 BackgroundColor(BEVY_GRAY.with_alpha(0.6)),
             ),
             (
@@ -412,4 +450,33 @@ fn toggle_gizmo(gizmo: AvailableGizmos) -> impl ObserverSystem<Pointer<Click>, (
             gizmos.toggle(gizmo);
         },
     )
+}
+
+fn menu_button(button: impl Bundle) -> impl Bundle {
+    (
+        Node {
+            width: Val::Px(100.0),
+            ..default()
+        },
+        children![button],
+    )
+}
+
+fn hspace(v: Val) -> impl Bundle {
+    Node {
+        width: v,
+        ..default()
+    }
+}
+
+fn text_input_queue(initial_text: &str) -> TextInputQueue {
+    let mut queue = TextInputQueue::default();
+    let overwrite_mode = false;
+    for char in initial_text.chars() {
+        queue.add(TextInputAction::Edit(TextInputEdit::Insert(
+            char,
+            overwrite_mode,
+        )));
+    }
+    queue
 }

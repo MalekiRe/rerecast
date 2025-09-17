@@ -3,7 +3,7 @@
 use bevy::{
     ecs::error::warn,
     feathers::{FeathersPlugins, dark_theme::create_dark_theme, theme::UiTheme},
-    input_focus::InputDispatchPlugin,
+    input_focus::{InputDispatchPlugin, tab_navigation::TabNavigationPlugin},
     prelude::*,
 };
 use bevy_rerecast::prelude::*;
@@ -32,7 +32,11 @@ fn main() -> AppExit {
                 ..default()
             }),
             // InputDispatchPlugin is also added by TextInputPlugin
-            FeathersPlugins.build().disable::<InputDispatchPlugin>(),
+            FeathersPlugins
+                .build()
+                .disable::<InputDispatchPlugin>()
+                // Breaks input focus for some reason?
+                .disable::<TabNavigationPlugin>(),
         ))
         .insert_resource(UiTheme(create_dark_theme()))
         .add_plugins((NavmeshPlugins::default(), TextInputPlugin))

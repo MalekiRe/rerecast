@@ -1553,6 +1553,7 @@ dependencies = [
  "bevy_rerecast",
  "bevy_ui_text_input",
  "bincode",
+ "cosmic-text",
  "ehttp",
  "rfd",
  "serde",
