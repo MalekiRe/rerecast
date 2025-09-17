@@ -1,7 +1,10 @@
 //! The editor for the Navmesh plugin.
 
 use bevy::{
-    ecs::error::warn, feathers::FeathersPlugins, input_focus::InputDispatchPlugin, prelude::*,
+    ecs::error::warn,
+    feathers::{FeathersPlugins, dark_theme::create_dark_theme, theme::UiTheme},
+    input_focus::InputDispatchPlugin,
+    prelude::*,
 };
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::TextInputPlugin;
@@ -31,6 +34,7 @@ fn main() -> AppExit {
             // InputDispatchPlugin is also added by TextInputPlugin
             FeathersPlugins.build().disable::<InputDispatchPlugin>(),
         ))
+        .insert_resource(UiTheme(create_dark_theme()))
         .add_plugins((NavmeshPlugins::default(), TextInputPlugin))
         .add_plugins((
             camera::plugin,

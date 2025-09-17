@@ -1,9 +1,11 @@
 use bevy::{
     color::palettes::tailwind,
     ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
+    feathers::{self, controls::ButtonProps, theme::ThemedText},
     prelude::*,
     tasks::prelude::*,
     ui::Val::*,
+    ui_widgets::{Activate, Callback},
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
@@ -30,7 +32,12 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn spawn_ui(mut commands: Commands) {
-    commands.spawn((
+    let ui = ui_bundle(&mut commands);
+    commands.spawn(ui);
+}
+
+fn ui_bundle(commands: &mut Commands) -> impl Bundle {
+    (
         Name::new("Canvas"),
         Node {
             width: Percent(100.0),
@@ -57,10 +64,40 @@ fn spawn_ui(mut commands: Commands) {
                 },
                 BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
                 children![
-                    button("Load Scene", spawn_load_scene_modal),
-                    button("Build Navmesh", build_navmesh),
-                    button("Save", save_navmesh),
-                    button("Load Navmesh", load_navmesh),
+                    feathers::controls::button(
+                        ButtonProps {
+                            on_click: Callback::System(
+                                commands.register_system(spawn_load_scene_modal)
+                            ),
+                            ..default()
+                        },
+                        (),
+                        Spawn((Text::new("Load Scene"), ThemedText))
+                    ),
+                    feathers::controls::button(
+                        ButtonProps {
+                            on_click: Callback::System(commands.register_system(build_navmesh)),
+                            ..default()
+                        },
+                        (),
+                        Spawn((Text::new("Build Navmesh"), ThemedText))
+                    ),
+                    feathers::controls::button(
+                        ButtonProps {
+                            on_click: Callback::System(commands.register_system(save_navmesh)),
+                            ..default()
+                        },
+                        (),
+                        Spawn((Text::new("Save"), ThemedText))
+                    ),
+                    feathers::controls::button(
+                        ButtonProps {
+                            on_click: Callback::System(commands.register_system(load_navmesh)),
+                            ..default()
+                        },
+                        (),
+                        Spawn((Text::new("Load Navmesh"), ThemedText))
+                    ),
                 ]
             ),
             (
@@ -134,7 +171,7 @@ fn spawn_ui(mut commands: Commands) {
                 ],
             )
         ],
-    ));
+    )
 }
 
 #[derive(Component)]
@@ -188,12 +225,12 @@ fn read_config_inputs(
 #[derive(Component)]
 struct LoadSceneModal;
 
-fn build_navmesh(_: On<Pointer<Click>>, mut commands: Commands) {
+fn build_navmesh(_: In<Activate>, mut commands: Commands) {
     commands.trigger(BuildNavmesh);
 }
 
 fn save_navmesh(
-    _: On<Pointer<Click>>,
+    _: In<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<SaveTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -219,7 +256,7 @@ fn save_navmesh(
 }
 
 fn load_navmesh(
-    _: On<Pointer<Click>>,
+    _: In<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<LoadTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -244,7 +281,7 @@ fn load_navmesh(
     commands.insert_resource(LoadTask(task));
 }
 
-fn spawn_load_scene_modal(_: On<Pointer<Click>>, mut commands: Commands) {
+fn spawn_load_scene_modal(_: In<Activate>, mut commands: Commands) {
     commands.spawn((
         Name::new("Backdrop"),
         Node {
