@@ -1,5 +1,5 @@
 use bevy::{
-    color::palettes::tailwind,
+    color::palettes::{css::NAVY, tailwind},
     ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
     feathers::{self, controls::ButtonProps, theme::ThemedText},
     prelude::*,
@@ -9,7 +9,7 @@ use bevy::{
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
-use bevy_ui_text_input::TextInputContents;
+use bevy_ui_text_input::{TextInputContents, TextInputMode, TextInputNode, TextInputPrompt};
 
 use rfd::AsyncFileDialog;
 
@@ -64,6 +64,21 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                 },
                 BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
                 children![
+                    (
+                        Node {
+                            width: Val::Px(250.),
+                            height: Val::Px(25.),
+                            ..default()
+                        },
+                        TextInputNode {
+                            mode: TextInputMode::SingleLine,
+                            max_chars: Some(20),
+                            clear_on_submit: true,
+                            ..Default::default()
+                        },
+                        TextInputPrompt::default(),
+                        BackgroundColor(NAVY.into())
+                    ),
                     feathers::controls::button(
                         ButtonProps {
                             on_click: Callback::System(
