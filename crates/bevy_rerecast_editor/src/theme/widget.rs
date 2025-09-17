@@ -65,7 +65,7 @@ pub fn hspace(px: f32) -> impl Bundle {
 /// A small square button with text and an action defined as an [`Observer`].
 pub(crate) fn button_small<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where
-    E: Event,
+    E: EntityEvent,
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
@@ -90,7 +90,7 @@ where
 /// A large rounded button with text and an action defined as an [`Observer`].
 pub fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where
-    E: Event,
+    E: EntityEvent,
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
@@ -118,7 +118,7 @@ fn button_base<E, B, M, I>(
     label_bundle: impl Bundle,
 ) -> impl Bundle
 where
-    E: Event,
+    E: EntityEvent,
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {
@@ -160,7 +160,7 @@ where
 
 pub fn checkbox<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where
-    E: Event,
+    E: EntityEvent,
     B: Bundle,
     I: IntoObserverSystem<E, B, M>,
 {

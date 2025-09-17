@@ -1,6 +1,6 @@
 //! The editor for the Navmesh plugin.
 
-use bevy::{ecs::error::warn, feathers::FeathersPlugins, prelude::*, winit::WinitPlugin};
+use bevy::{ecs::error::warn, feathers::FeathersPlugins, prelude::*};
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::TextInputPlugin;
 
