@@ -30,13 +30,14 @@ use crate::{
         palette::BEVY_GRAY,
         widget::{button, checkbox, decimal_input},
     },
-    visualization::{AvailableGizmos, GizmosToDraw},
+    visualization::{AvailableGizmos, GizmosToDraw, ObstacleGizmo},
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, spawn_ui);
     app.add_systems(Update, read_config_inputs);
-    app.add_observer(close_modal);
+    app.add_observer(update_primary_buttons_when_obstacle_added);
+    app.add_observer(update_primary_buttons_when_obstacle_removed);
 }
 
 fn spawn_ui(mut commands: Commands) {
@@ -89,41 +90,59 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         },
                         text_input_queue("http://127.0.0.1:15702"),
                     ),
-                    menu_button(feathers::controls::button(
-                        ButtonProps {
-                            on_click: Callback::System(
-                                commands.register_system(spawn_load_scene_modal)
-                            ),
-                            variant: ButtonVariant::Primary,
-                            ..default()
-                        },
-                        (),
-                        Spawn((Text::new("Load Scene"), ThemedText))
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(
+                                    |_: In<Activate>, mut commands: Commands| {
+                                        commands.trigger(GetNavmeshInput);
+                                    }
+                                )),
+                                variant: ButtonVariant::Primary,
+                                ..default()
+                            },
+                            (),
+                            Spawn((Text::new("Load Scene"), ThemedText))
+                        ),
+                        LoadSceneButton
                     )),
                     hspace(px(10)),
-                    menu_button(feathers::controls::button(
-                        ButtonProps {
-                            on_click: Callback::System(commands.register_system(build_navmesh)),
-                            ..default()
-                        },
-                        InteractionDisabled,
-                        Spawn((Text::new("Build"), ThemedText))
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(
+                                    |_: In<Activate>, mut commands: Commands| {
+                                        commands.trigger(BuildNavmesh);
+                                    }
+                                )),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Build"), ThemedText))
+                        ),
+                        BuildNavmeshButton
                     )),
-                    menu_button(feathers::controls::button(
-                        ButtonProps {
-                            on_click: Callback::System(commands.register_system(save_navmesh)),
-                            ..default()
-                        },
-                        InteractionDisabled,
-                        Spawn((Text::new("Save"), ThemedText))
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(save_navmesh)),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Save"), ThemedText))
+                        ),
+                        SaveNavmeshButton
                     )),
-                    menu_button(feathers::controls::button(
-                        ButtonProps {
-                            on_click: Callback::System(commands.register_system(load_navmesh)),
-                            ..default()
-                        },
-                        InteractionDisabled,
-                        Spawn((Text::new("Load"), ThemedText))
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(load_navmesh)),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Load"), ThemedText))
+                        ),
+                        LoadNavmeshButton
                     )),
                 ]
             ),
@@ -275,13 +294,6 @@ fn read_config_inputs(
     };
 }
 
-#[derive(Component)]
-struct LoadSceneModal;
-
-fn build_navmesh(_: In<Activate>, mut commands: Commands) {
-    commands.trigger(BuildNavmesh);
-}
-
 fn save_navmesh(
     _: In<Activate>,
     mut commands: Commands,
@@ -334,108 +346,6 @@ fn load_navmesh(
     commands.insert_resource(LoadTask(task));
 }
 
-fn spawn_load_scene_modal(_: In<Activate>, mut commands: Commands) {
-    commands.spawn((
-        Name::new("Backdrop"),
-        Node {
-            width: Percent(100.0),
-            height: Percent(100.0),
-            display: Display::Grid,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        LoadSceneModal,
-        Pickable {
-            should_block_lower: true,
-            ..default()
-        },
-        BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)),
-        children![(
-            Name::new("Modal"),
-            Node {
-                min_width: Px(300.0),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(10.0),
-                ..default()
-            },
-            BackgroundColor(tailwind::GRAY_300.into()),
-            BorderRadius::all(Px(10.0)),
-            children![
-                (
-                    Name::new("Title Bar"),
-                    Node {
-                        column_gap: Val::Px(5.0),
-                        align_items: AlignItems::Center,
-                        padding: UiRect::axes(Val::Px(10.0), Val::Px(5.0)),
-                        ..default()
-                    },
-                    BackgroundColor(Color::BLACK.with_alpha(0.1)),
-                    children![modal_title("Load Scene"), button("x", close_load_scene),],
-                ),
-                (
-                    Name::new("Modal Content"),
-                    Node {
-                        padding: UiRect::all(Val::Px(10.0)),
-                        flex_direction: FlexDirection::Column,
-                        row_gap: Val::Px(10.0),
-                        ..default()
-                    },
-                    children![
-                        modal_text("http://127.0.0.1:15702"),
-                        (
-                            Name::new("Load Button"),
-                            Node { ..default() },
-                            children![button("Load", load_scene)]
-                        )
-                    ]
-                )
-            ],
-        )],
-    ));
-}
-
-fn modal_title(text: impl Into<String>) -> impl Bundle {
-    (
-        Node {
-            flex_grow: 1.0,
-            ..default()
-        },
-        Text::new(text),
-        TextLayout::new_with_justify(Justify::Center),
-        TextFont::from_font_size(17.0),
-        TextColor(Color::BLACK),
-    )
-}
-
-fn modal_text(text: impl Into<String>) -> impl Bundle {
-    (
-        Text::new(text),
-        TextFont::from_font_size(15.0),
-        TextColor(tailwind::GRAY_800.into()),
-    )
-}
-
-fn load_scene(_: On<Pointer<Click>>, mut commands: Commands) {
-    commands.trigger(CloseModal);
-    commands.trigger(GetNavmeshInput);
-}
-
-#[derive(Event)]
-struct CloseModal;
-
-fn close_modal(
-    _: On<CloseModal>,
-    mut commands: Commands,
-    modal: Single<Entity, With<LoadSceneModal>>,
-) {
-    commands.entity(*modal).try_despawn();
-}
-
-fn close_load_scene(_: On<Pointer<Click>>, mut commands: Commands) {
-    commands.trigger(CloseModal);
-}
-
 fn status_bar_text(text: impl Into<String>) -> impl Bundle {
     (
         Text::new(text),
@@ -479,4 +389,55 @@ fn text_input_queue(initial_text: &str) -> TextInputQueue {
         )));
     }
     queue
+}
+
+#[derive(Component)]
+struct LoadSceneButton;
+
+#[derive(Component)]
+struct BuildNavmeshButton;
+
+#[derive(Component)]
+struct SaveNavmeshButton;
+
+#[derive(Component)]
+struct LoadNavmeshButton;
+
+fn update_primary_buttons_when_obstacle_added(
+    _obstacle_added: On<Add, ObstacleGizmo>,
+    load_button: Single<Entity, With<LoadSceneButton>>,
+    build_button: Single<Entity, With<BuildNavmeshButton>>,
+    save_button: Single<Entity, With<SaveNavmeshButton>>,
+    load_navmesh_button: Single<Entity, With<LoadNavmeshButton>>,
+    mut commands: Commands,
+) {
+    commands.entity(*load_button).insert(ButtonVariant::Normal);
+    commands
+        .entity(*build_button)
+        .insert(ButtonVariant::Primary)
+        .remove::<InteractionDisabled>();
+    commands
+        .entity(*save_button)
+        .remove::<InteractionDisabled>();
+    commands
+        .entity(*load_navmesh_button)
+        .remove::<InteractionDisabled>();
+}
+
+fn update_primary_buttons_when_obstacle_removed(
+    _obstacle_removed: On<Remove, ObstacleGizmo>,
+    load_button: Single<Entity, With<LoadSceneButton>>,
+    build_button: Single<Entity, With<BuildNavmeshButton>>,
+    save_button: Single<Entity, With<SaveNavmeshButton>>,
+    load_navmesh_button: Single<Entity, With<LoadNavmeshButton>>,
+    mut commands: Commands,
+) {
+    commands.entity(*load_button).insert(ButtonVariant::Primary);
+    commands
+        .entity(*build_button)
+        .insert((ButtonVariant::Normal, InteractionDisabled));
+    commands.entity(*save_button).insert(InteractionDisabled);
+    commands
+        .entity(*load_navmesh_button)
+        .insert(InteractionDisabled);
 }

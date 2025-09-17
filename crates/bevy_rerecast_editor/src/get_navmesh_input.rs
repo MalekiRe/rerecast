@@ -17,7 +17,7 @@ use bevy_rerecast::editor_integration::{
 
 use crate::{
     backend::{GlobalNavmeshSettings, NavmeshHandle, NavmeshObstacles},
-    visualization::{OstacleGizmo, VisualMesh},
+    visualization::{ObstacleGizmo, VisualMesh},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -194,7 +194,7 @@ fn poll_navmesh_input(
         Transform::default(),
         Mesh3d(meshes.add(mesh)),
         Visibility::Hidden,
-        OstacleGizmo,
+        ObstacleGizmo,
         Gizmo {
             handle: gizmos.add(GizmoAsset::new()),
             line_config: GizmoLineConfig {
