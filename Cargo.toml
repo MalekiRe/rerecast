@@ -13,7 +13,6 @@ categories = ["game-development"]
 readme = "readme.md"
 
 [workspace.dependencies]
-# TODO: wait for release
 avian3d = { version = "0.3.0",  default-features = false }
 serde = { version = "1.0.219", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.140", default-features = false, features = [
