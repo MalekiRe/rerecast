@@ -221,6 +221,7 @@ fn headless_plugins(app: &mut App) {
         GltfPlugin::default(),
     ))
     .init_asset::<StandardMaterial>()
+    .init_asset::<Mesh>()
     .register_type::<Visibility>()
     .register_type::<InheritedVisibility>()
     .register_type::<ViewVisibility>()
