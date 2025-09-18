@@ -41,6 +41,8 @@ pub(super) fn plugin(app: &mut App) {
     app.add_observer(update_primary_buttons_when_obstacle_added);
     app.add_observer(update_primary_buttons_when_obstacle_removed);
     app.add_observer(clear_focus);
+    app.add_observer(set_ui_size);
+    app.add_observer(set_font_size);
 }
 
 fn spawn_ui(mut commands: Commands) {
@@ -78,7 +80,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                 children![
                     (
                         Node {
-                            width: Val::Px(220.),
+                            width: Val::Px(250.),
                             height: percent(100),
                             top: px(2),
                             justify_content: JustifyContent::Center,
@@ -114,7 +116,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         ),
                         LoadSceneButton
                     )),
-                    hspace(px(10)),
+                    hspace(px(20)),
                     menu_button((
                         feathers::controls::button(
                             ButtonProps {
@@ -158,7 +160,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                 Name::new("Property Panel"),
                 ThemeBackgroundColor(tokens::WINDOW_BG),
                 Node {
-                    width: px(250),
+                    width: px(280),
                     justify_self: JustifySelf::End,
                     flex_direction: FlexDirection::Column,
                     column_gap: px(8),
@@ -171,8 +173,8 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         Node {
                             display: Display::Grid,
                             grid_template_columns: vec![
-                                RepeatedGridTrack::percent(1, 75.),
-                                RepeatedGridTrack::percent(1, 25.)
+                                RepeatedGridTrack::percent(1, 80.),
+                                RepeatedGridTrack::percent(1, 20.)
                             ],
                             column_gap: px(8),
                             row_gap: px(5),
@@ -180,7 +182,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                         },
                         InheritableFont {
                             font: HandleOrPath::Path(fonts::REGULAR.to_owned()),
-                            font_size: 14.0,
+                            ..default()
                         },
                         children![
                             decimal_option_label("Cell Size Fraction"),
@@ -214,7 +216,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                     (
                         Node {
                             flex_direction: FlexDirection::Column,
-                            left: percent(20),
+                            left: percent(10),
                             row_gap: px(5),
                             ..default()
                         },
@@ -273,10 +275,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                     ..default()
                 },
                 ThemeBackgroundColor(tokens::WINDOW_BG),
-                children![
-                    status_bar_text("Status Bar"),
-                    status_bar_text("Rerecast Editor v0.2.0")
-                ],
+                children![(StatusText, label("")), label("Rerecast Editor v0.2.0")],
             )
         ],
     )
@@ -382,18 +381,10 @@ fn load_navmesh(
     commands.insert_resource(LoadTask(task));
 }
 
-fn status_bar_text(text: impl Into<String>) -> impl Bundle {
-    (
-        Text::new(text),
-        TextFont::from_font_size(15.0),
-        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-    )
-}
-
 fn menu_button(button: impl Bundle) -> impl Bundle {
     (
         Node {
-            width: Val::Px(100.0),
+            width: Val::Px(120.0),
             ..default()
         },
         children![(button, ThemedText)],
@@ -440,6 +431,9 @@ struct SaveNavmeshButton;
 
 #[derive(Component)]
 struct LoadNavmeshButton;
+
+#[derive(Component)]
+struct StatusText;
 
 fn update_primary_buttons_when_obstacle_added(
     _obstacle_added: On<Add, ObstacleGizmo>,
@@ -533,5 +527,25 @@ fn set_gizmo(gizmo: AvailableGizmos) -> impl System<In = In<ValueChange<bool>>, 
             }
             gizmos.set(gizmo, val.value);
         },
+    )
+}
+
+fn set_ui_size(add: On<Add, InheritableFont>, mut font: Query<&mut InheritableFont>) {
+    font.get_mut(add.entity).unwrap().font_size = FONT_SIZE;
+}
+fn set_font_size(add: On<Add, TextFont>, mut font: Query<&mut TextFont>) {
+    font.get_mut(add.entity).unwrap().font_size = FONT_SIZE;
+}
+
+const FONT_SIZE: f32 = 18.0;
+
+fn label(text: impl Into<String>) -> impl Bundle {
+    (
+        Node::default(),
+        InheritableFont {
+            font: HandleOrPath::Path(fonts::REGULAR.to_owned()),
+            ..default()
+        },
+        children![(Text(text.into()), ThemedText)],
     )
 }
