@@ -1,13 +1,12 @@
 use bevy::{
-    color::palettes::{css::NAVY, tailwind},
-    ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
+    ecs::prelude::*,
     feathers::{
         self,
         constants::fonts,
         controls::{ButtonProps, ButtonVariant, CheckboxProps},
         font_styles::InheritableFont,
         handle_or_path::HandleOrPath,
-        theme::{ThemeBackgroundColor, ThemeFontColor, ThemeToken, ThemedText},
+        theme::{ThemeBackgroundColor, ThemedText},
         tokens,
     },
     input_focus::InputFocus,
@@ -19,8 +18,7 @@ use bevy::{
 };
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::{
-    TextInputBuffer, TextInputContents, TextInputFilter, TextInputMode, TextInputNode,
-    TextInputPrompt, TextInputQueue,
+    TextInputContents, TextInputFilter, TextInputMode, TextInputNode, TextInputQueue,
     actions::{TextInputAction, TextInputEdit},
 };
 
@@ -31,7 +29,6 @@ use crate::{
     get_navmesh_input::GetNavmeshInput,
     load::LoadTask,
     save::SaveTask,
-    theme::palette::BEVY_GRAY,
     visualization::{AvailableGizmos, GizmosToDraw, ObstacleGizmo},
 };
 
