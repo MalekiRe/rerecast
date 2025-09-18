@@ -1,23 +1,26 @@
 use bevy::{
-    color::palettes::tailwind,
+    color::palettes::{css::NAVY, tailwind},
     ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
     feathers::{
         self,
-        controls::{ButtonProps, ButtonVariant},
-        theme::{ThemeFontColor, ThemeToken, ThemedText},
+        constants::fonts,
+        controls::{ButtonProps, ButtonVariant, CheckboxProps},
+        font_styles::InheritableFont,
+        handle_or_path::HandleOrPath,
+        theme::{ThemeBackgroundColor, ThemeFontColor, ThemeToken, ThemedText},
         tokens,
     },
     input_focus::InputFocus,
     prelude::*,
     tasks::prelude::*,
-    ui::{InteractionDisabled, Val::*},
-    ui_widgets::{Activate, Callback},
+    ui::{Checked, InteractionDisabled, Val::*},
+    ui_widgets::{Activate, Callback, ValueChange},
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
 use bevy_ui_text_input::{
-    TextInputBuffer, TextInputContents, TextInputMode, TextInputNode, TextInputPrompt,
-    TextInputQueue,
+    TextInputBuffer, TextInputContents, TextInputFilter, TextInputMode, TextInputNode,
+    TextInputPrompt, TextInputQueue,
     actions::{TextInputAction, TextInputEdit},
 };
 
@@ -28,10 +31,7 @@ use crate::{
     get_navmesh_input::GetNavmeshInput,
     load::LoadTask,
     save::SaveTask,
-    theme::{
-        palette::BEVY_GRAY,
-        widget::{button, checkbox, decimal_input},
-    },
+    theme::palette::BEVY_GRAY,
     visualization::{AvailableGizmos, GizmosToDraw, ObstacleGizmo},
 };
 
@@ -74,12 +74,15 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                     column_gap: Val::Px(5.0),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+                ThemeBackgroundColor(tokens::WINDOW_BG),
                 children![
                     (
                         Node {
-                            width: Val::Px(250.),
-                            height: Val::Px(25.),
+                            width: Val::Px(220.),
+                            height: percent(100),
+                            top: px(2),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
                             ..default()
                         },
                         TextInputNode {
@@ -88,7 +91,7 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                             ..Default::default()
                         },
                         TextFont {
-                            font_size: 18.0,
+                            font_size: 16.0,
                             ..default()
                         },
                         text_input_queue("http://127.0.0.1:15702"),
@@ -153,15 +156,11 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
             ),
             (
                 Name::new("Property Panel"),
+                ThemeBackgroundColor(tokens::WINDOW_BG),
                 Node {
-                    width: px(300),
+                    width: px(250),
                     justify_self: JustifySelf::End,
                     flex_direction: FlexDirection::Column,
-                    display: Display::Grid,
-                    grid_template_columns: vec![
-                        // Menu bar
-                        RepeatedGridTrack::auto(2),
-                    ],
                     column_gap: px(8),
                     padding: UiRect::all(Px(30.0)),
                     align_content: AlignContent::Start,
@@ -170,68 +169,100 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                 children![
                     (
                         Node {
-                            justify_self: JustifySelf::End,
+                            display: Display::Grid,
+                            grid_template_columns: vec![
+                                RepeatedGridTrack::percent(1, 75.),
+                                RepeatedGridTrack::percent(1, 25.)
+                            ],
+                            column_gap: px(8),
+                            row_gap: px(5),
                             ..default()
                         },
-                        Text::new("First")
+                        InheritableFont {
+                            font: HandleOrPath::Path(fonts::REGULAR.to_owned()),
+                            font_size: 14.0,
+                        },
+                        children![
+                            decimal_option_label("Cell Size Fraction"),
+                            decimal_option_input(
+                                CellSizeInput,
+                                GlobalNavmeshSettings::default().cell_size_fraction
+                            ),
+                            decimal_option_label("Cell Height Fraction"),
+                            decimal_option_input(
+                                CellHeightInput,
+                                GlobalNavmeshSettings::default().cell_height_fraction
+                            ),
+                            decimal_option_label("Agent Radius"),
+                            decimal_option_input(
+                                AgentRadiusInput,
+                                GlobalNavmeshSettings::default().agent_radius
+                            ),
+                            decimal_option_label("Agent Height"),
+                            decimal_option_input(
+                                AgentHeightInput,
+                                GlobalNavmeshSettings::default().agent_height
+                            ),
+                            decimal_option_label("Agent Walkable Climb"),
+                            decimal_option_input(
+                                WalkableClimbInput,
+                                GlobalNavmeshSettings::default().walkable_climb
+                            ),
+                        ],
                     ),
-                    Text::new("Second"),
+                    vspace(px(50)),
                     (
                         Node {
-                            justify_self: JustifySelf::End,
+                            flex_direction: FlexDirection::Column,
+                            left: percent(20),
+                            row_gap: px(5),
                             ..default()
                         },
-                        Text::new("Thitttrd")
+                        children![
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::Visual))
+                                    ),
+                                },
+                                Checked,
+                                Spawn((Text::new("Show Visual"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::Obstacles))
+                                    ),
+                                },
+                                (),
+                                Spawn((Text::new("Show Obstacles"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands.register_system(set_gizmo(
+                                            AvailableGizmos::DetailMesh
+                                        ))
+                                    )
+                                },
+                                Checked,
+                                Spawn((Text::new("Show Detail Mesh"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::PolyMesh))
+                                    )
+                                },
+                                (),
+                                Spawn((Text::new("Show Polygon Mesh"), ThemedText))
+                            ),
+                        ],
                     ),
-                    Text::new("Fourth")
-                ],
-                /*
-                Children::spawn(SpawnWith(|parent: &mut RelatedSpawner<ChildOf>| {
-                    parent.spawn(checkbox(
-                        "Show Visual",
-                        toggle_gizmo(AvailableGizmos::Visual),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Obstacles",
-                        toggle_gizmo(AvailableGizmos::Obstacles),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Polygon Mesh",
-                        toggle_gizmo(AvailableGizmos::PolyMesh),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Detail Mesh",
-                        toggle_gizmo(AvailableGizmos::DetailMesh),
-                    ));
-
-                    parent.spawn(decimal_input(
-                        "Cell Size Fraction",
-                        GlobalNavmeshSettings::default().cell_size_fraction,
-                        CellSizeInput,
-                    ));
-
-                    parent.spawn(decimal_input(
-                        "Cell Height Fraction",
-                        GlobalNavmeshSettings::default().cell_height_fraction,
-                        CellHeightInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Radius",
-                        GlobalNavmeshSettings::default().agent_radius,
-                        WalkableRadiusInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Height",
-                        GlobalNavmeshSettings::default().agent_height,
-                        WalkableHeightInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Walkable Climb",
-                        GlobalNavmeshSettings::default().walkable_climb,
-                        WalkableClimbInput,
-                    ));
-                }))*/
-                BackgroundColor(BEVY_GRAY.with_alpha(0.6)),
+                ]
             ),
             (
                 Name::new("Status Bar"),
@@ -241,10 +272,10 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                     padding: UiRect::axes(Px(10.0), Px(5.0)),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+                ThemeBackgroundColor(tokens::WINDOW_BG),
                 children![
                     status_bar_text("Status Bar"),
-                    status_bar_text("Rerecast Editor v0.1.0")
+                    status_bar_text("Rerecast Editor v0.2.0")
                 ],
             )
         ],
@@ -258,10 +289,10 @@ struct CellSizeInput;
 struct CellHeightInput;
 
 #[derive(Component)]
-struct WalkableHeightInput;
+struct AgentHeightInput;
 
 #[derive(Component)]
-struct WalkableRadiusInput;
+struct AgentRadiusInput;
 
 #[derive(Component)]
 struct WalkableClimbInput;
@@ -270,8 +301,8 @@ fn read_config_inputs(
     mut settings: ResMut<GlobalNavmeshSettings>,
     cell_size: Single<&TextInputContents, With<CellSizeInput>>,
     cell_height: Single<&TextInputContents, With<CellHeightInput>>,
-    walkable_height: Single<&TextInputContents, With<WalkableHeightInput>>,
-    walkable_radius: Single<&TextInputContents, With<WalkableRadiusInput>>,
+    agent_height: Single<&TextInputContents, With<AgentHeightInput>>,
+    agent_radius: Single<&TextInputContents, With<AgentRadiusInput>>,
     walkable_climb: Single<&TextInputContents, With<WalkableClimbInput>>,
 ) {
     let d = NavmeshSettings::default();
@@ -279,9 +310,9 @@ fn read_config_inputs(
         cell_size_fraction: cell_size.get().parse().unwrap_or(d.cell_size_fraction),
         cell_height_fraction: cell_height.get().parse().unwrap_or(d.cell_height_fraction),
         walkable_slope_angle: d.walkable_slope_angle,
-        agent_height: walkable_height.get().parse().unwrap_or(d.agent_height),
+        agent_height: agent_height.get().parse().unwrap_or(d.agent_height),
         walkable_climb: walkable_climb.get().parse().unwrap_or(d.walkable_climb),
-        agent_radius: walkable_radius.get().parse().unwrap_or(d.agent_radius),
+        agent_radius: agent_radius.get().parse().unwrap_or(d.agent_radius),
         min_region_size: d.min_region_size,
         merge_region_size: d.merge_region_size,
         detail_sample_max_error: d.detail_sample_max_error,
@@ -359,14 +390,6 @@ fn status_bar_text(text: impl Into<String>) -> impl Bundle {
     )
 }
 
-fn toggle_gizmo(gizmo: AvailableGizmos) -> impl ObserverSystem<Pointer<Click>, (), ()> {
-    IntoSystem::into_system(
-        move |_: On<Pointer<Click>>, mut gizmos: ResMut<GizmosToDraw>| {
-            gizmos.toggle(gizmo);
-        },
-    )
-}
-
 fn menu_button(button: impl Bundle) -> impl Bundle {
     (
         Node {
@@ -377,17 +400,24 @@ fn menu_button(button: impl Bundle) -> impl Bundle {
     )
 }
 
-fn hspace(v: Val) -> impl Bundle {
+fn hspace(h: Val) -> impl Bundle {
     Node {
-        width: v,
+        width: h,
         ..default()
     }
 }
 
-fn text_input_queue(initial_text: &str) -> TextInputQueue {
+fn vspace(v: Val) -> impl Bundle {
+    Node {
+        height: v,
+        ..default()
+    }
+}
+
+fn text_input_queue(initial_text: impl Into<String>) -> TextInputQueue {
     let mut queue = TextInputQueue::default();
     let overwrite_mode = false;
-    for char in initial_text.chars() {
+    for char in initial_text.into().chars() {
         queue.add(TextInputAction::Edit(TextInputEdit::Insert(
             char,
             overwrite_mode,
@@ -454,4 +484,54 @@ fn clear_focus(press: On<Pointer<Press>>, mut focus: ResMut<InputFocus>) {
     if Some(press.original_event_target()) != focus.0 {
         focus.0 = None;
     }
+}
+
+fn decimal_option_label(text: impl Into<String>) -> impl Bundle {
+    (
+        Node {
+            justify_self: JustifySelf::End,
+            ..default()
+        },
+        ThemedText,
+        Text::new(text.into()),
+    )
+}
+
+fn decimal_option_input(marker: impl Bundle, initial_value: f32) -> impl Bundle {
+    (
+        Node {
+            width: Val::Px(50.),
+            height: Val::Px(25.),
+            ..default()
+        },
+        TextInputNode {
+            mode: TextInputMode::SingleLine,
+            filter: Some(TextInputFilter::Decimal),
+            clear_on_submit: false,
+            ..Default::default()
+        },
+        TextFont {
+            font_size: 14.0,
+            ..default()
+        },
+        text_input_queue(initial_value.to_string()),
+        TextInputContents::default(),
+        ThemeBackgroundColor(tokens::SLIDER_BG),
+        marker,
+    )
+}
+
+fn set_gizmo(gizmo: AvailableGizmos) -> impl System<In = In<ValueChange<bool>>, Out = ()> {
+    IntoSystem::into_system(
+        move |val: In<ValueChange<bool>>,
+              mut gizmos: ResMut<GizmosToDraw>,
+              mut commands: Commands| {
+            if val.value {
+                commands.entity(val.source).insert(Checked);
+            } else {
+                commands.entity(val.source).remove::<Checked>();
+            }
+            gizmos.set(gizmo, val.value);
+        },
+    )
 }

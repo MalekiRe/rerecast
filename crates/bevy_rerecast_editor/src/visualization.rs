@@ -24,11 +24,11 @@ pub(super) fn plugin(app: &mut App) {
 pub(crate) struct GizmosToDraw(HashSet<AvailableGizmos>);
 
 impl GizmosToDraw {
-    pub(crate) fn toggle(&mut self, gizmo: AvailableGizmos) {
-        if self.contains(&gizmo) {
-            self.remove(&gizmo);
-        } else {
+    pub(crate) fn set(&mut self, gizmo: AvailableGizmos, enabled: bool) {
+        if enabled {
             self.insert(gizmo);
+        } else {
+            self.remove(&gizmo);
         }
     }
 }
