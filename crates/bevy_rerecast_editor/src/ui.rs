@@ -92,6 +92,8 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                             ..default()
                         },
                         text_input_queue("http://127.0.0.1:15702"),
+                        TextInputContents::default(),
+                        ConnectionInput,
                     ),
                     menu_button((
                         feathers::controls::button(
@@ -393,6 +395,9 @@ fn text_input_queue(initial_text: &str) -> TextInputQueue {
     }
     queue
 }
+
+#[derive(Component)]
+pub(crate) struct ConnectionInput;
 
 #[derive(Component)]
 struct LoadSceneButton;
