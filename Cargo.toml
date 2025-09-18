@@ -13,7 +13,7 @@ categories = ["game-development"]
 readme = "readme.md"
 
 [workspace.dependencies]
-avian3d = { version = "0.3.0",  default-features = false }
+avian3d = { version = "0.3.0", git = "https://github.com/Jondolf/avian", branch = "bevy-0.17", default-features = false }
 serde = { version = "1.0.219", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.140", default-features = false, features = [
     "alloc",
@@ -94,6 +94,5 @@ std_instead_of_alloc = "warn"
 alloc_instead_of_core = "warn"
 
 [patch.crates-io]
-avian3d = { git = "https://github.com/Jondolf/avian", branch = "bevy-0.17" }
 bevy_trenchbroom = { git = "https://github.com/Noxmore/bevy_trenchbroom", branch = "bevy-0.17" }
 bevy_ui_text_input = { git = "https://github.com/ickshonpe/bevy_ui_text_input" }
