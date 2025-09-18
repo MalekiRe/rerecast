@@ -4,8 +4,10 @@ use bevy::{
     feathers::{
         self,
         controls::{ButtonProps, ButtonVariant},
-        theme::ThemedText,
+        theme::{ThemeFontColor, ThemeToken, ThemedText},
+        tokens,
     },
+    input_focus::InputFocus,
     prelude::*,
     tasks::prelude::*,
     ui::{InteractionDisabled, Val::*},
@@ -38,6 +40,7 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, read_config_inputs);
     app.add_observer(update_primary_buttons_when_obstacle_added);
     app.add_observer(update_primary_buttons_when_obstacle_removed);
+    app.add_observer(clear_focus);
 }
 
 fn spawn_ui(mut commands: Commands) {
@@ -368,7 +371,7 @@ fn menu_button(button: impl Bundle) -> impl Bundle {
             width: Val::Px(100.0),
             ..default()
         },
-        children![button],
+        children![(button, ThemedText)],
     )
 }
 
@@ -440,4 +443,10 @@ fn update_primary_buttons_when_obstacle_removed(
     commands
         .entity(*load_navmesh_button)
         .insert(InteractionDisabled);
+}
+
+fn clear_focus(press: On<Pointer<Press>>, mut focus: ResMut<InputFocus>) {
+    if Some(press.original_event_target()) != focus.0 {
+        focus.0 = None;
+    }
 }

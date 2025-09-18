@@ -31,9 +31,9 @@ fn main() -> AppExit {
                 }),
                 ..default()
             }),
-            // InputDispatchPlugin is also added by TextInputPlugin
             FeathersPlugins
                 .build()
+                // InputDispatchPlugin is also added by TextInputPlugin
                 .disable::<InputDispatchPlugin>()
                 // Breaks input focus for some reason?
                 .disable::<TabNavigationPlugin>(),
