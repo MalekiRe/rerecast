@@ -1,7 +1,7 @@
 [package]
 name = "bevy_rerecast_core"
 description = "Core editorless Bevy integration for bevy_rerecast"
-version = "0.2.0"
+version = "0.3.0-rc.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -14,9 +14,12 @@ readme = { workspace = true }
 bevy_ecs = { workspace = true, features = ["bevy_reflect", "serialize"] }
 bevy_transform = { workspace = true, features = ["bevy-support"] }
 bevy_tasks = { workspace = true }
+bevy_camera = { workspace = true }
+bevy_light = { workspace = true }
 bevy_derive = { workspace = true }
 bevy_reflect = { workspace = true }
 bevy_app = { workspace = true }
+bevy_utils = { workspace = true }
 bevy_math = { workspace = true, features = ["bevy_reflect", "serialize"] }
 bevy_platform = { workspace = true }
 
@@ -49,12 +52,12 @@ default_no_std = ["libm", "critical-section"]
 std = [
     "bevy_ecs/std",
     "bevy_transform/std",
-    "bevy_tasks/std",
     "bevy_reflect/std",
     "bevy_app/std",
     "bevy_math/std",
     "bevy_platform/std",
     "bevy_color?/std",
+    "bevy_utils/std",
     "serde/std",
     "anyhow/std",
     "tracing?/std",

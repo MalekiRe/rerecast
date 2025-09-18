@@ -8,7 +8,7 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{prelude::*, system::SystemParam};
 use bevy_platform::collections::HashMap;
 use bevy_tasks::{AsyncComputeTaskPool, Task, futures_lite::future};
-use bevy_transform::TransformSystem;
+use bevy_transform::TransformSystems;
 use glam::{U16Vec3, Vec3, Vec3A};
 use rerecast::{Aabb3d, DetailNavmesh, HeightfieldBuilder, TriMesh};
 
@@ -24,7 +24,7 @@ pub(super) fn plugin(app: &mut App) {
         PostUpdate,
         (drain_queue_into_tasks, poll_tasks)
             .chain()
-            .after(TransformSystem::TransformPropagate),
+            .after(TransformSystems::Propagate),
     );
 }
 
@@ -148,7 +148,12 @@ fn poll_tasks(
             }
         };
         // Process the generated navmesh
-        navmeshes.insert(strong.id(), navmesh);
+        if let Err(err) = navmeshes.insert(strong.id(), navmesh) {
+            #[cfg(feature = "tracing")]
+            tracing::error!("Failed to insert navmesh: {err}");
+            let _ = err;
+            continue;
+        }
         commands.trigger(NavmeshReady(strong.id()));
     }
     for id in removed_ids {

@@ -65,6 +65,7 @@ fn shape_to_trimesh(
     let (vertices, indices) = match shape {
         // Simple cases
         TypedShape::Cuboid(cuboid) => cuboid.to_trimesh(),
+        TypedShape::Voxels(voxels) => voxels.to_trimesh(),
         TypedShape::ConvexPolyhedron(convex_polyhedron) => convex_polyhedron.to_trimesh(),
         TypedShape::HeightField(height_field) => height_field.to_trimesh(),
         // Triangles

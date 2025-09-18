@@ -14,7 +14,7 @@ pub(super) fn plugin(app: &mut App) {
             draw_visual.run_if(toggled_gizmo_on(AvailableGizmos::Visual)),
             hide_poly_mesh.run_if(toggled_gizmo_off(AvailableGizmos::PolyMesh)),
             hide_detail_mesh.run_if(toggled_gizmo_off(AvailableGizmos::DetailMesh)),
-            hide_ostacles.run_if(toggled_gizmo_off(AvailableGizmos::Obstacles)),
+            hide_obstacles.run_if(toggled_gizmo_off(AvailableGizmos::Obstacles)),
             hide_visual.run_if(toggled_gizmo_off(AvailableGizmos::Visual)),
         ),
     );
@@ -24,11 +24,11 @@ pub(super) fn plugin(app: &mut App) {
 pub(crate) struct GizmosToDraw(HashSet<AvailableGizmos>);
 
 impl GizmosToDraw {
-    pub(crate) fn toggle(&mut self, gizmo: AvailableGizmos) {
-        if self.contains(&gizmo) {
-            self.remove(&gizmo);
-        } else {
+    pub(crate) fn set(&mut self, gizmo: AvailableGizmos, enabled: bool) {
+        if enabled {
             self.insert(gizmo);
+        } else {
+            self.remove(&gizmo);
         }
     }
 }
@@ -41,13 +41,13 @@ pub(crate) enum AvailableGizmos {
     DetailMesh,
 }
 
-fn toggled_gizmo_on(gizmo: AvailableGizmos) -> impl Condition<()> {
+fn toggled_gizmo_on(gizmo: AvailableGizmos) -> impl SystemCondition<()> {
     IntoSystem::into_system(move |gizmos: Res<GizmosToDraw>| {
         gizmos.is_changed() && gizmos.contains(&gizmo)
     })
 }
 
-fn toggled_gizmo_off(gizmo: AvailableGizmos) -> impl Condition<()> {
+fn toggled_gizmo_off(gizmo: AvailableGizmos) -> impl SystemCondition<()> {
     IntoSystem::into_system(move |gizmos: Res<GizmosToDraw>| {
         gizmos.is_changed() && !gizmos.contains(&gizmo)
     })
@@ -73,7 +73,7 @@ fn draw_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
 
 fn draw_obstacles(
     mut gizmos: ResMut<Assets<GizmoAsset>>,
-    obstacles: Query<(&Mesh3d, &Gizmo), With<OstacleGizmo>>,
+    obstacles: Query<(&Mesh3d, &Gizmo), With<ObstacleGizmo>>,
     meshes: Res<Assets<Mesh>>,
 ) {
     for (mesh, gizmo) in &obstacles {
@@ -108,8 +108,8 @@ fn draw_visual(mut visibility: Query<&mut Visibility, With<VisualMesh>>) {
     }
 }
 
-fn hide_ostacles(
-    gizmo_handles: Query<&Gizmo, With<OstacleGizmo>>,
+fn hide_obstacles(
+    gizmo_handles: Query<&Gizmo, With<ObstacleGizmo>>,
     mut gizmos: ResMut<Assets<GizmoAsset>>,
 ) {
     for gizmo in &gizmo_handles {
@@ -139,4 +139,4 @@ fn hide_detail_mesh(mut config: ResMut<NavmeshGizmoConfig>) {
 pub(crate) struct VisualMesh;
 
 #[derive(Component)]
-pub(crate) struct OstacleGizmo;
+pub(crate) struct ObstacleGizmo;

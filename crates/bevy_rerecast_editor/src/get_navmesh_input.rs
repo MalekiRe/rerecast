@@ -1,10 +1,10 @@
 use anyhow::anyhow;
 use bevy::{
     asset::RenderAssetUsages,
+    mesh::{Indices, PrimitiveTopology},
     platform::collections::HashMap,
     prelude::*,
     remote::BrpRequest,
-    render::mesh::{Indices, PrimitiveTopology},
     tasks::{AsyncComputeTaskPool, IoTaskPool, Task, futures_lite::future},
 };
 use bevy_rerecast::editor_integration::{
@@ -14,10 +14,12 @@ use bevy_rerecast::editor_integration::{
     },
     transmission::deserialize,
 };
+use bevy_ui_text_input::TextInputContents;
 
 use crate::{
     backend::{GlobalNavmeshSettings, NavmeshHandle, NavmeshObstacles},
-    visualization::{OstacleGizmo, VisualMesh},
+    ui::ConnectionInput,
+    visualization::{ObstacleGizmo, VisualMesh},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -43,9 +45,10 @@ enum GetNavmeshInputRequestTask {
 }
 
 fn generate_navmesh_input(
-    _: Trigger<GetNavmeshInput>,
+    _: On<GetNavmeshInput>,
     mut commands: Commands,
     settings: Res<GlobalNavmeshSettings>,
+    connection_input: Single<&TextInputContents, With<ConnectionInput>>,
     maybe_task: Option<Res<GetNavmeshInputRequestTask>>,
 ) {
     if maybe_task.is_some() {
@@ -53,14 +56,12 @@ fn generate_navmesh_input(
         return;
     }
     let settings = settings.0.clone();
+    let url = connection_input.get().to_string();
     let future = async move {
         let params = GenerateEditorInputParams {
             backend_input: settings,
         };
         let json = serde_json::to_value(params)?;
-        // Create the URL. We're going to need it to issue the HTTP request.
-        let host_part = format!("{}:{}", "127.0.0.1", 15702);
-        let url = format!("http://{host_part}/");
         let req = BrpRequest {
             jsonrpc: String::from("2.0"),
             method: String::from(BRP_GENERATE_EDITOR_INPUT),
@@ -194,7 +195,7 @@ fn poll_navmesh_input(
         Transform::default(),
         Mesh3d(meshes.add(mesh)),
         Visibility::Hidden,
-        OstacleGizmo,
+        ObstacleGizmo,
         Gizmo {
             handle: gizmos.add(GizmoAsset::new()),
             line_config: GizmoLineConfig {

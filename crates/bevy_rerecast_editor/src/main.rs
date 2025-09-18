@@ -1,7 +1,9 @@
 //! The editor for the Navmesh plugin.
 
 use bevy::{
-    ecs::error::{GLOBAL_ERROR_HANDLER, warn},
+    ecs::error::warn,
+    feathers::{FeathersPlugins, dark_theme::create_dark_theme, theme::UiTheme},
+    input_focus::{InputDispatchPlugin, tab_navigation::TabNavigationPlugin},
     prelude::*,
 };
 use bevy_rerecast::prelude::*;
@@ -19,12 +21,24 @@ mod ui;
 mod visualization;
 
 fn main() -> AppExit {
-    GLOBAL_ERROR_HANDLER
-        .set(warn)
-        .expect("The error handler can only be set once, globally.");
-
     App::new()
-        .add_plugins(DefaultPlugins)
+        .set_error_handler(warn)
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Rerecast Navmesh Editor".to_string(),
+                    ..default()
+                }),
+                ..default()
+            }),
+            FeathersPlugins
+                .build()
+                // InputDispatchPlugin is also added by TextInputPlugin
+                .disable::<InputDispatchPlugin>()
+                // Breaks input focus for some reason?
+                .disable::<TabNavigationPlugin>(),
+        ))
+        .insert_resource(UiTheme(create_dark_theme()))
         .add_plugins((NavmeshPlugins::default(), TextInputPlugin))
         .add_plugins((
             camera::plugin,

@@ -1,13 +1,26 @@
 use bevy::{
-    color::palettes::tailwind,
-    ecs::{prelude::*, relationship::RelatedSpawner, spawn::SpawnWith, system::ObserverSystem},
+    ecs::prelude::*,
+    feathers::{
+        self,
+        constants::fonts,
+        controls::{ButtonProps, ButtonVariant, CheckboxProps},
+        font_styles::InheritableFont,
+        handle_or_path::HandleOrPath,
+        theme::{ThemeBackgroundColor, ThemedText},
+        tokens,
+    },
+    input_focus::InputFocus,
     prelude::*,
     tasks::prelude::*,
-    ui::Val::*,
+    ui::{Checked, InteractionDisabled, Val::*},
+    ui_widgets::{Activate, Callback, ValueChange},
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
-use bevy_ui_text_input::TextInputContents;
+use bevy_ui_text_input::{
+    TextInputContents, TextInputFilter, TextInputMode, TextInputNode, TextInputQueue,
+    actions::{TextInputAction, TextInputEdit},
+};
 
 use rfd::AsyncFileDialog;
 
@@ -16,21 +29,26 @@ use crate::{
     get_navmesh_input::GetNavmeshInput,
     load::LoadTask,
     save::SaveTask,
-    theme::{
-        palette::BEVY_GRAY,
-        widget::{button, checkbox, decimal_input},
-    },
-    visualization::{AvailableGizmos, GizmosToDraw},
+    visualization::{AvailableGizmos, GizmosToDraw, ObstacleGizmo},
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, spawn_ui);
     app.add_systems(Update, read_config_inputs);
-    app.add_observer(close_modal);
+    app.add_observer(update_primary_buttons_when_obstacle_added);
+    app.add_observer(update_primary_buttons_when_obstacle_removed);
+    app.add_observer(clear_focus);
+    app.add_observer(set_ui_size);
+    app.add_observer(set_font_size);
 }
 
 fn spawn_ui(mut commands: Commands) {
-    commands.spawn((
+    let ui = ui_bundle(&mut commands);
+    commands.spawn(ui);
+}
+
+fn ui_bundle(commands: &mut Commands) -> impl Bundle {
+    (
         Name::new("Canvas"),
         Node {
             width: Percent(100.0),
@@ -55,69 +73,195 @@ fn spawn_ui(mut commands: Commands) {
                     column_gap: Val::Px(5.0),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+                ThemeBackgroundColor(tokens::WINDOW_BG),
                 children![
-                    button("Load Scene", spawn_load_scene_modal),
-                    button("Build Navmesh", build_navmesh),
-                    button("Save", save_navmesh),
-                    button("Load Navmesh", load_navmesh),
+                    (
+                        Node {
+                            width: Val::Px(250.),
+                            height: percent(100),
+                            top: px(2),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        },
+                        TextInputNode {
+                            mode: TextInputMode::SingleLine,
+                            clear_on_submit: false,
+                            ..Default::default()
+                        },
+                        TextFont {
+                            font_size: 16.0,
+                            ..default()
+                        },
+                        text_input_queue("http://127.0.0.1:15702"),
+                        TextInputContents::default(),
+                        ConnectionInput,
+                    ),
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(
+                                    |_: In<Activate>, mut commands: Commands| {
+                                        commands.trigger(GetNavmeshInput);
+                                    }
+                                )),
+                                variant: ButtonVariant::Primary,
+                                ..default()
+                            },
+                            (),
+                            Spawn((Text::new("Load Scene"), ThemedText))
+                        ),
+                        LoadSceneButton
+                    )),
+                    hspace(px(20)),
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(
+                                    |_: In<Activate>, mut commands: Commands| {
+                                        commands.trigger(BuildNavmesh);
+                                    }
+                                )),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Build"), ThemedText))
+                        ),
+                        BuildNavmeshButton
+                    )),
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(save_navmesh)),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Save"), ThemedText))
+                        ),
+                        SaveNavmeshButton
+                    )),
+                    menu_button((
+                        feathers::controls::button(
+                            ButtonProps {
+                                on_click: Callback::System(commands.register_system(load_navmesh)),
+                                ..default()
+                            },
+                            InteractionDisabled,
+                            Spawn((Text::new("Load"), ThemedText))
+                        ),
+                        LoadNavmeshButton
+                    )),
                 ]
             ),
             (
                 Name::new("Property Panel"),
+                ThemeBackgroundColor(tokens::WINDOW_BG),
                 Node {
-                    width: Px(300.0),
+                    width: px(280),
                     justify_self: JustifySelf::End,
                     flex_direction: FlexDirection::Column,
+                    column_gap: px(8),
                     padding: UiRect::all(Px(30.0)),
+                    align_content: AlignContent::Start,
                     ..default()
                 },
-                Children::spawn(SpawnWith(|parent: &mut RelatedSpawner<ChildOf>| {
-                    parent.spawn(checkbox(
-                        "Show Visual",
-                        toggle_gizmo(AvailableGizmos::Visual),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Obstacles",
-                        toggle_gizmo(AvailableGizmos::Obstacles),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Polygon Mesh",
-                        toggle_gizmo(AvailableGizmos::PolyMesh),
-                    ));
-                    parent.spawn(checkbox(
-                        "Show Detail Mesh",
-                        toggle_gizmo(AvailableGizmos::DetailMesh),
-                    ));
-
-                    parent.spawn(decimal_input(
-                        "Cell Size Fraction",
-                        GlobalNavmeshSettings::default().cell_size_fraction,
-                        CellSizeInput,
-                    ));
-
-                    parent.spawn(decimal_input(
-                        "Cell Height Fraction",
-                        GlobalNavmeshSettings::default().cell_height_fraction,
-                        CellHeightInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Radius",
-                        GlobalNavmeshSettings::default().agent_radius,
-                        WalkableRadiusInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Height",
-                        GlobalNavmeshSettings::default().agent_height,
-                        WalkableHeightInput,
-                    ));
-                    parent.spawn(decimal_input(
-                        "Agent Walkable Climb",
-                        GlobalNavmeshSettings::default().walkable_climb,
-                        WalkableClimbInput,
-                    ));
-                })),
-                BackgroundColor(BEVY_GRAY.with_alpha(0.6)),
+                children![
+                    (
+                        Node {
+                            display: Display::Grid,
+                            grid_template_columns: vec![
+                                RepeatedGridTrack::percent(1, 80.),
+                                RepeatedGridTrack::percent(1, 20.)
+                            ],
+                            column_gap: px(8),
+                            row_gap: px(5),
+                            ..default()
+                        },
+                        InheritableFont {
+                            font: HandleOrPath::Path(fonts::REGULAR.to_owned()),
+                            ..default()
+                        },
+                        children![
+                            decimal_option_label("Cell Size Fraction"),
+                            decimal_option_input(
+                                CellSizeInput,
+                                GlobalNavmeshSettings::default().cell_size_fraction
+                            ),
+                            decimal_option_label("Cell Height Fraction"),
+                            decimal_option_input(
+                                CellHeightInput,
+                                GlobalNavmeshSettings::default().cell_height_fraction
+                            ),
+                            decimal_option_label("Agent Radius"),
+                            decimal_option_input(
+                                AgentRadiusInput,
+                                GlobalNavmeshSettings::default().agent_radius
+                            ),
+                            decimal_option_label("Agent Height"),
+                            decimal_option_input(
+                                AgentHeightInput,
+                                GlobalNavmeshSettings::default().agent_height
+                            ),
+                            decimal_option_label("Agent Walkable Climb"),
+                            decimal_option_input(
+                                WalkableClimbInput,
+                                GlobalNavmeshSettings::default().walkable_climb
+                            ),
+                        ],
+                    ),
+                    vspace(px(50)),
+                    (
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            left: percent(10),
+                            row_gap: px(5),
+                            ..default()
+                        },
+                        children![
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::Visual))
+                                    ),
+                                },
+                                Checked,
+                                Spawn((Text::new("Show Visual"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::Obstacles))
+                                    ),
+                                },
+                                (),
+                                Spawn((Text::new("Show Obstacles"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands.register_system(set_gizmo(
+                                            AvailableGizmos::DetailMesh
+                                        ))
+                                    )
+                                },
+                                Checked,
+                                Spawn((Text::new("Show Detail Mesh"), ThemedText))
+                            ),
+                            feathers::controls::checkbox(
+                                CheckboxProps {
+                                    on_change: Callback::System(
+                                        commands
+                                            .register_system(set_gizmo(AvailableGizmos::PolyMesh))
+                                    )
+                                },
+                                (),
+                                Spawn((Text::new("Show Polygon Mesh"), ThemedText))
+                            ),
+                        ],
+                    ),
+                ]
             ),
             (
                 Name::new("Status Bar"),
@@ -127,14 +271,11 @@ fn spawn_ui(mut commands: Commands) {
                     padding: UiRect::axes(Px(10.0), Px(5.0)),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
-                children![
-                    status_bar_text("Status Bar"),
-                    status_bar_text("Rerecast Editor v0.1.0")
-                ],
+                ThemeBackgroundColor(tokens::WINDOW_BG),
+                children![(StatusText, label("")), label("Rerecast Editor v0.2.0")],
             )
         ],
-    ));
+    )
 }
 
 #[derive(Component)]
@@ -144,10 +285,10 @@ struct CellSizeInput;
 struct CellHeightInput;
 
 #[derive(Component)]
-struct WalkableHeightInput;
+struct AgentHeightInput;
 
 #[derive(Component)]
-struct WalkableRadiusInput;
+struct AgentRadiusInput;
 
 #[derive(Component)]
 struct WalkableClimbInput;
@@ -156,8 +297,8 @@ fn read_config_inputs(
     mut settings: ResMut<GlobalNavmeshSettings>,
     cell_size: Single<&TextInputContents, With<CellSizeInput>>,
     cell_height: Single<&TextInputContents, With<CellHeightInput>>,
-    walkable_height: Single<&TextInputContents, With<WalkableHeightInput>>,
-    walkable_radius: Single<&TextInputContents, With<WalkableRadiusInput>>,
+    agent_height: Single<&TextInputContents, With<AgentHeightInput>>,
+    agent_radius: Single<&TextInputContents, With<AgentRadiusInput>>,
     walkable_climb: Single<&TextInputContents, With<WalkableClimbInput>>,
 ) {
     let d = NavmeshSettings::default();
@@ -165,9 +306,9 @@ fn read_config_inputs(
         cell_size_fraction: cell_size.get().parse().unwrap_or(d.cell_size_fraction),
         cell_height_fraction: cell_height.get().parse().unwrap_or(d.cell_height_fraction),
         walkable_slope_angle: d.walkable_slope_angle,
-        agent_height: walkable_height.get().parse().unwrap_or(d.agent_height),
+        agent_height: agent_height.get().parse().unwrap_or(d.agent_height),
         walkable_climb: walkable_climb.get().parse().unwrap_or(d.walkable_climb),
-        agent_radius: walkable_radius.get().parse().unwrap_or(d.agent_radius),
+        agent_radius: agent_radius.get().parse().unwrap_or(d.agent_radius),
         min_region_size: d.min_region_size,
         merge_region_size: d.merge_region_size,
         detail_sample_max_error: d.detail_sample_max_error,
@@ -185,15 +326,8 @@ fn read_config_inputs(
     };
 }
 
-#[derive(Component)]
-struct LoadSceneModal;
-
-fn build_navmesh(_: Trigger<Pointer<Click>>, mut commands: Commands) {
-    commands.trigger(BuildNavmesh);
-}
-
 fn save_navmesh(
-    _: Trigger<Pointer<Click>>,
+    _: In<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<SaveTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -219,7 +353,7 @@ fn save_navmesh(
 }
 
 fn load_navmesh(
-    _: Trigger<Pointer<Click>>,
+    _: In<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<LoadTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -244,120 +378,171 @@ fn load_navmesh(
     commands.insert_resource(LoadTask(task));
 }
 
-fn spawn_load_scene_modal(_: Trigger<Pointer<Click>>, mut commands: Commands) {
-    commands.spawn((
-        Name::new("Backdrop"),
-        Node {
-            width: Percent(100.0),
-            height: Percent(100.0),
-            display: Display::Grid,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        LoadSceneModal,
-        Pickable {
-            should_block_lower: true,
-            ..default()
-        },
-        BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)),
-        children![(
-            Name::new("Modal"),
-            Node {
-                min_width: Px(300.0),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(10.0),
-                ..default()
-            },
-            BackgroundColor(tailwind::GRAY_300.into()),
-            BorderRadius::all(Px(10.0)),
-            children![
-                (
-                    Name::new("Title Bar"),
-                    Node {
-                        column_gap: Val::Px(5.0),
-                        align_items: AlignItems::Center,
-                        padding: UiRect::axes(Val::Px(10.0), Val::Px(5.0)),
-                        ..default()
-                    },
-                    BackgroundColor(Color::BLACK.with_alpha(0.1)),
-                    children![modal_title("Load Scene"), button("x", close_load_scene),],
-                ),
-                (
-                    Name::new("Modal Content"),
-                    Node {
-                        padding: UiRect::all(Val::Px(10.0)),
-                        flex_direction: FlexDirection::Column,
-                        row_gap: Val::Px(10.0),
-                        ..default()
-                    },
-                    children![
-                        modal_text("http://127.0.0.1:15702"),
-                        (
-                            Name::new("Load Button"),
-                            Node { ..default() },
-                            children![button("Load", load_scene)]
-                        )
-                    ]
-                )
-            ],
-        )],
-    ));
-}
-
-fn modal_title(text: impl Into<String>) -> impl Bundle {
+fn menu_button(button: impl Bundle) -> impl Bundle {
     (
         Node {
-            flex_grow: 1.0,
+            width: Val::Px(120.0),
             ..default()
         },
-        Text::new(text),
-        TextLayout::new_with_justify(JustifyText::Center),
-        TextFont::from_font_size(17.0),
-        TextColor(Color::BLACK),
+        children![(button, ThemedText)],
     )
 }
 
-fn modal_text(text: impl Into<String>) -> impl Bundle {
-    (
-        Text::new(text),
-        TextFont::from_font_size(15.0),
-        TextColor(tailwind::GRAY_800.into()),
-    )
+fn hspace(h: Val) -> impl Bundle {
+    Node {
+        width: h,
+        ..default()
+    }
 }
 
-fn load_scene(_: Trigger<Pointer<Click>>, mut commands: Commands) {
-    commands.trigger(CloseModal);
-    commands.trigger(GetNavmeshInput);
+fn vspace(v: Val) -> impl Bundle {
+    Node {
+        height: v,
+        ..default()
+    }
 }
 
-#[derive(Event)]
-struct CloseModal;
+fn text_input_queue(initial_text: impl Into<String>) -> TextInputQueue {
+    let mut queue = TextInputQueue::default();
+    let overwrite_mode = false;
+    for char in initial_text.into().chars() {
+        queue.add(TextInputAction::Edit(TextInputEdit::Insert(
+            char,
+            overwrite_mode,
+        )));
+    }
+    queue
+}
 
-fn close_modal(
-    _: Trigger<CloseModal>,
+#[derive(Component)]
+pub(crate) struct ConnectionInput;
+
+#[derive(Component)]
+struct LoadSceneButton;
+
+#[derive(Component)]
+struct BuildNavmeshButton;
+
+#[derive(Component)]
+struct SaveNavmeshButton;
+
+#[derive(Component)]
+struct LoadNavmeshButton;
+
+#[derive(Component)]
+struct StatusText;
+
+fn update_primary_buttons_when_obstacle_added(
+    _obstacle_added: On<Add, ObstacleGizmo>,
+    load_button: Single<Entity, With<LoadSceneButton>>,
+    build_button: Single<Entity, With<BuildNavmeshButton>>,
+    save_button: Single<Entity, With<SaveNavmeshButton>>,
+    load_navmesh_button: Single<Entity, With<LoadNavmeshButton>>,
     mut commands: Commands,
-    modal: Single<Entity, With<LoadSceneModal>>,
 ) {
-    commands.entity(*modal).try_despawn();
+    commands.entity(*load_button).insert(ButtonVariant::Normal);
+    commands
+        .entity(*build_button)
+        .insert(ButtonVariant::Primary)
+        .remove::<InteractionDisabled>();
+    commands
+        .entity(*save_button)
+        .remove::<InteractionDisabled>();
+    commands
+        .entity(*load_navmesh_button)
+        .remove::<InteractionDisabled>();
 }
 
-fn close_load_scene(_: Trigger<Pointer<Click>>, mut commands: Commands) {
-    commands.trigger(CloseModal);
+fn update_primary_buttons_when_obstacle_removed(
+    _obstacle_removed: On<Remove, ObstacleGizmo>,
+    load_button: Single<Entity, With<LoadSceneButton>>,
+    build_button: Single<Entity, With<BuildNavmeshButton>>,
+    save_button: Single<Entity, With<SaveNavmeshButton>>,
+    load_navmesh_button: Single<Entity, With<LoadNavmeshButton>>,
+    mut commands: Commands,
+) {
+    commands.entity(*load_button).insert(ButtonVariant::Primary);
+    commands
+        .entity(*build_button)
+        .insert((ButtonVariant::Normal, InteractionDisabled));
+    commands.entity(*save_button).insert(InteractionDisabled);
+    commands
+        .entity(*load_navmesh_button)
+        .insert(InteractionDisabled);
 }
 
-fn status_bar_text(text: impl Into<String>) -> impl Bundle {
+fn clear_focus(press: On<Pointer<Press>>, mut focus: ResMut<InputFocus>) {
+    if Some(press.original_event_target()) != focus.0 {
+        focus.0 = None;
+    }
+}
+
+fn decimal_option_label(text: impl Into<String>) -> impl Bundle {
     (
-        Text::new(text),
-        TextFont::from_font_size(15.0),
-        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+        Node {
+            justify_self: JustifySelf::End,
+            ..default()
+        },
+        ThemedText,
+        Text::new(text.into()),
     )
 }
 
-fn toggle_gizmo(gizmo: AvailableGizmos) -> impl ObserverSystem<Pointer<Click>, (), ()> {
-    IntoSystem::into_system(
-        move |_: Trigger<Pointer<Click>>, mut gizmos: ResMut<GizmosToDraw>| {
-            gizmos.toggle(gizmo);
+fn decimal_option_input(marker: impl Bundle, initial_value: f32) -> impl Bundle {
+    (
+        Node {
+            width: Val::Px(50.),
+            height: Val::Px(25.),
+            ..default()
         },
+        TextInputNode {
+            mode: TextInputMode::SingleLine,
+            filter: Some(TextInputFilter::Decimal),
+            clear_on_submit: false,
+            ..Default::default()
+        },
+        TextFont {
+            font_size: 14.0,
+            ..default()
+        },
+        text_input_queue(initial_value.to_string()),
+        TextInputContents::default(),
+        ThemeBackgroundColor(tokens::SLIDER_BG),
+        marker,
+    )
+}
+
+fn set_gizmo(gizmo: AvailableGizmos) -> impl System<In = In<ValueChange<bool>>, Out = ()> {
+    IntoSystem::into_system(
+        move |val: In<ValueChange<bool>>,
+              mut gizmos: ResMut<GizmosToDraw>,
+              mut commands: Commands| {
+            if val.value {
+                commands.entity(val.source).insert(Checked);
+            } else {
+                commands.entity(val.source).remove::<Checked>();
+            }
+            gizmos.set(gizmo, val.value);
+        },
+    )
+}
+
+fn set_ui_size(add: On<Add, InheritableFont>, mut font: Query<&mut InheritableFont>) {
+    font.get_mut(add.entity).unwrap().font_size = FONT_SIZE;
+}
+fn set_font_size(add: On<Add, TextFont>, mut font: Query<&mut TextFont>) {
+    font.get_mut(add.entity).unwrap().font_size = FONT_SIZE;
+}
+
+const FONT_SIZE: f32 = 18.0;
+
+fn label(text: impl Into<String>) -> impl Bundle {
+    (
+        Node::default(),
+        InheritableFont {
+            font: HandleOrPath::Path(fonts::REGULAR.to_owned()),
+            ..default()
+        },
+        children![(Text(text.into()), ThemedText)],
     )
 }

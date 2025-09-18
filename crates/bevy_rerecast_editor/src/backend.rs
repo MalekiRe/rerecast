@@ -34,7 +34,7 @@ pub(crate) struct GlobalNavmeshSettings(pub(crate) NavmeshSettings);
 pub(crate) struct NavmeshHandle(pub(crate) Handle<Navmesh>);
 
 fn build_navmesh(
-    _trigger: Trigger<BuildNavmesh>,
+    _trigger: On<BuildNavmesh>,
     mut commands: Commands,
     config: Res<GlobalNavmeshSettings>,
     mut navmesh_generator: NavmeshGenerator,

@@ -106,17 +106,14 @@ fn generate_navmesh(mut generator: NavmeshGenerator, mut commands: Commands) {
 }
 
 fn configure_camera(
-    trigger: Trigger<OnAdd, Camera>,
+    trigger: On<Add, Camera>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands
-        .entity(trigger.target())
-        .insert(EnvironmentMapLight {
-            diffuse_map: asset_server.load("environment_maps/voortrekker_interior_1k_diffuse.ktx2"),
-            specular_map: asset_server
-                .load("environment_maps/voortrekker_interior_1k_specular.ktx2"),
-            intensity: 2000.0,
-            ..default()
-        });
+    commands.entity(trigger.entity).insert(EnvironmentMapLight {
+        diffuse_map: asset_server.load("environment_maps/voortrekker_interior_1k_diffuse.ktx2"),
+        specular_map: asset_server.load("environment_maps/voortrekker_interior_1k_specular.ktx2"),
+        intensity: 2000.0,
+        ..default()
+    });
 }

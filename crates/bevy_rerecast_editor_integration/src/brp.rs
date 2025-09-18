@@ -4,13 +4,14 @@ use core::str::FromStr;
 
 use bevy_app::prelude::*;
 use bevy_asset::{prelude::*, uuid::Uuid};
+use bevy_camera::visibility::InheritedVisibility;
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
-use bevy_image::Image;
+use bevy_image::{Image, SerializedImage};
+use bevy_mesh::{Mesh, Mesh3d, SerializedMesh};
 use bevy_pbr::{MeshMaterial3d, StandardMaterial};
 use bevy_platform::collections::HashMap;
 use bevy_remote::{BrpError, BrpResult, RemoteMethodSystemId, RemoteMethods};
-use bevy_render::prelude::*;
 use bevy_rerecast_core::{NavmeshBackend, NavmeshSettings};
 use bevy_tasks::{AsyncComputeTaskPool, Task, futures_lite::future};
 use bevy_transform::prelude::*;
@@ -20,7 +21,7 @@ use serde_json::Value;
 
 use crate::{
     EditorExluded,
-    transmission::{SerializedImage, SerializedMesh, SerializedStandardMaterial, serialize},
+    transmission::{SerializedStandardMaterial, serialize},
 };
 
 pub(super) fn plugin(app: &mut App) {
@@ -136,7 +137,7 @@ fn get_navmesh_input(In(params): In<Option<Value>>, world: &mut World) -> BrpRes
             } else {
                 let mesh = meshes.get(mesh_handle)?;
                 let index = serialized_meshes.len() as u32;
-                serialized_meshes.push(SerializedMesh::from_mesh(mesh));
+                serialized_meshes.push(SerializedMesh::from_mesh(mesh.clone()));
                 mesh_indices.insert(mesh_handle.0.clone(), index);
                 index
             };

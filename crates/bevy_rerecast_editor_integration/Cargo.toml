@@ -1,7 +1,7 @@
 [package]
 name = "bevy_rerecast_editor_integration"
 description = "Editor integration for bevy_rerecast_core"
-version = "0.2.0"
+version = "0.3.0-rc.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -36,8 +36,10 @@ bevy_derive = { workspace = true }
 bevy_math = { workspace = true }
 bevy_color = { workspace = true }
 bevy_platform = { workspace = true }
+bevy_camera = { workspace = true }
 bevy_tasks = { workspace = true }
-bevy_image = { workspace = true }
+bevy_mesh = { workspace = true, features = ["serialize"] }
+bevy_image = { workspace = true, features = ["serialize"] }
 
 tracing = { workspace = true }
 thiserror = { workspace = true }
