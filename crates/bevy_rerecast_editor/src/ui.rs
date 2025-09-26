@@ -207,6 +207,13 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                                 WalkableClimbInput,
                                 GlobalNavmeshSettings::default().walkable_climb
                             ),
+                            decimal_option_label("Max Slope (degrees)"),
+                            decimal_option_input(
+                                MaxSlopeInput,
+                                GlobalNavmeshSettings::default()
+                                    .walkable_slope_angle
+                                    .to_degrees()
+                            ),
                         ],
                     ),
                     vspace(px(50)),
@@ -293,6 +300,9 @@ struct AgentRadiusInput;
 #[derive(Component)]
 struct WalkableClimbInput;
 
+#[derive(Component)]
+struct MaxSlopeInput;
+
 fn read_config_inputs(
     mut settings: ResMut<GlobalNavmeshSettings>,
     cell_size: Single<&TextInputContents, With<CellSizeInput>>,
@@ -300,12 +310,17 @@ fn read_config_inputs(
     agent_height: Single<&TextInputContents, With<AgentHeightInput>>,
     agent_radius: Single<&TextInputContents, With<AgentRadiusInput>>,
     walkable_climb: Single<&TextInputContents, With<WalkableClimbInput>>,
+    max_slope: Single<&TextInputContents, With<MaxSlopeInput>>,
 ) {
     let d = NavmeshSettings::default();
     settings.0 = NavmeshSettings {
         cell_size_fraction: cell_size.get().parse().unwrap_or(d.cell_size_fraction),
         cell_height_fraction: cell_height.get().parse().unwrap_or(d.cell_height_fraction),
-        walkable_slope_angle: d.walkable_slope_angle,
+        walkable_slope_angle: max_slope
+            .get()
+            .parse()
+            .unwrap_or(d.walkable_slope_angle.to_degrees())
+            .to_radians(),
         agent_height: agent_height.get().parse().unwrap_or(d.agent_height),
         walkable_climb: walkable_climb.get().parse().unwrap_or(d.walkable_climb),
         agent_radius: agent_radius.get().parse().unwrap_or(d.agent_radius),
