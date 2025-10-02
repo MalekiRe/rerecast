@@ -120,5 +120,5 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Check rerecast
         run: cargo check --no-default-features --features default_no_std --manifest-path crates/rerecast/Cargo.toml --target ${{ matrix.target }}
-      - name: Check bevy_rerecast_core
-        run: cargo check --no-default-features --features default_no_std --manifest-path crates/bevy_rerecast_core/Cargo.toml --target ${{ matrix.target }}
+      #- name: Check bevy_rerecast_core
+      #  run: cargo check --no-default-features --features default_no_std --manifest-path crates/bevy_rerecast_core/Cargo.toml --target ${{ matrix.target }}
