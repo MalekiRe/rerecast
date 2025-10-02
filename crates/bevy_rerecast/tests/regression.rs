@@ -9,8 +9,8 @@ use bevy::{
     gltf::GltfPlugin,
     log::LogPlugin,
     math::bounding::Aabb3d,
+    mesh::MeshPlugin,
     prelude::*,
-    render::mesh::MeshPlugin,
     scene::{SceneInstanceReady, ScenePlugin},
 };
 use bevy_rerecast::{Mesh3dBackendPlugin, debug::NavmeshDebugPlugin, prelude::*};
@@ -221,7 +221,6 @@ fn headless_plugins(app: &mut App) {
         GltfPlugin::default(),
     ))
     .init_asset::<StandardMaterial>()
-    .init_asset::<Mesh>()
     .register_type::<Visibility>()
     .register_type::<InheritedVisibility>()
     .register_type::<ViewVisibility>()

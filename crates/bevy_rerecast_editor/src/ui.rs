@@ -1,9 +1,12 @@
 use bevy::{
-    ecs::prelude::*,
+    ecs::{
+        prelude::*,
+        system::{IntoObserverSystem, ObserverSystem},
+    },
     feathers::{
         self,
         constants::fonts,
-        controls::{ButtonProps, ButtonVariant, CheckboxProps},
+        controls::{ButtonProps, ButtonVariant},
         font_styles::InheritableFont,
         handle_or_path::HandleOrPath,
         theme::{ThemeBackgroundColor, ThemedText},
@@ -13,7 +16,7 @@ use bevy::{
     prelude::*,
     tasks::prelude::*,
     ui::{Checked, InteractionDisabled, Val::*},
-    ui_widgets::{Activate, Callback, ValueChange},
+    ui_widgets::{Activate, ValueChange, observe},
     window::{PrimaryWindow, RawHandleWrapper},
 };
 use bevy_rerecast::prelude::*;
@@ -43,11 +46,11 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn spawn_ui(mut commands: Commands) {
-    let ui = ui_bundle(&mut commands);
+    let ui = ui_bundle();
     commands.spawn(ui);
 }
 
-fn ui_bundle(commands: &mut Commands) -> impl Bundle {
+fn ui_bundle() -> impl Bundle {
     (
         Name::new("Canvas"),
         Node {
@@ -99,56 +102,43 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                     ),
                     menu_button((
                         feathers::controls::button(
-                            ButtonProps {
-                                on_click: Callback::System(commands.register_system(
-                                    |_: In<Activate>, mut commands: Commands| {
-                                        commands.trigger(GetNavmeshInput);
-                                    }
-                                )),
-                                variant: ButtonVariant::Primary,
-                                ..default()
-                            },
+                            ButtonProps::default(),
                             (),
                             Spawn((Text::new("Load Scene"), ThemedText))
                         ),
+                        observe(|_: On<Activate>, mut commands: Commands| {
+                            commands.trigger(GetNavmeshInput);
+                        }),
                         LoadSceneButton
                     )),
                     hspace(px(20)),
                     menu_button((
                         feathers::controls::button(
-                            ButtonProps {
-                                on_click: Callback::System(commands.register_system(
-                                    |_: In<Activate>, mut commands: Commands| {
-                                        commands.trigger(BuildNavmesh);
-                                    }
-                                )),
-                                ..default()
-                            },
+                            ButtonProps::default(),
                             InteractionDisabled,
                             Spawn((Text::new("Build"), ThemedText))
                         ),
+                        observe(|_: On<Activate>, mut commands: Commands| {
+                            commands.trigger(BuildNavmesh);
+                        }),
                         BuildNavmeshButton
                     )),
                     menu_button((
                         feathers::controls::button(
-                            ButtonProps {
-                                on_click: Callback::System(commands.register_system(save_navmesh)),
-                                ..default()
-                            },
+                            ButtonProps::default(),
                             InteractionDisabled,
                             Spawn((Text::new("Save"), ThemedText))
                         ),
+                        observe(save_navmesh),
                         SaveNavmeshButton
                     )),
                     menu_button((
                         feathers::controls::button(
-                            ButtonProps {
-                                on_click: Callback::System(commands.register_system(load_navmesh)),
-                                ..default()
-                            },
+                            ButtonProps::default(),
                             InteractionDisabled,
                             Spawn((Text::new("Load"), ThemedText))
                         ),
+                        observe(load_navmesh),
                         LoadNavmeshButton
                     )),
                 ]
@@ -225,47 +215,34 @@ fn ui_bundle(commands: &mut Commands) -> impl Bundle {
                             ..default()
                         },
                         children![
-                            feathers::controls::checkbox(
-                                CheckboxProps {
-                                    on_change: Callback::System(
-                                        commands
-                                            .register_system(set_gizmo(AvailableGizmos::Visual))
-                                    ),
-                                },
-                                Checked,
-                                Spawn((Text::new("Show Visual"), ThemedText))
+                            (
+                                feathers::controls::checkbox(
+                                    Checked,
+                                    Spawn((Text::new("Show Visual"), ThemedText))
+                                ),
+                                observe(set_gizmo(AvailableGizmos::Visual))
                             ),
-                            feathers::controls::checkbox(
-                                CheckboxProps {
-                                    on_change: Callback::System(
-                                        commands
-                                            .register_system(set_gizmo(AvailableGizmos::Obstacles))
-                                    ),
-                                },
-                                (),
-                                Spawn((Text::new("Show Obstacles"), ThemedText))
+                            (
+                                feathers::controls::checkbox(
+                                    (),
+                                    Spawn((Text::new("Show Obstacles"), ThemedText))
+                                ),
+                                observe(set_gizmo(AvailableGizmos::Obstacles))
                             ),
-                            feathers::controls::checkbox(
-                                CheckboxProps {
-                                    on_change: Callback::System(
-                                        commands.register_system(set_gizmo(
-                                            AvailableGizmos::DetailMesh
-                                        ))
-                                    )
-                                },
-                                Checked,
-                                Spawn((Text::new("Show Detail Mesh"), ThemedText))
+                            (
+                                feathers::controls::checkbox(
+                                    Checked,
+                                    Spawn((Text::new("Show Detail Mesh"), ThemedText))
+                                ),
+                                observe(set_gizmo(AvailableGizmos::DetailMesh))
                             ),
-                            feathers::controls::checkbox(
-                                CheckboxProps {
-                                    on_change: Callback::System(
-                                        commands
-                                            .register_system(set_gizmo(AvailableGizmos::PolyMesh))
-                                    )
-                                },
-                                (),
-                                Spawn((Text::new("Show Polygon Mesh"), ThemedText))
-                            ),
+                            (
+                                feathers::controls::checkbox(
+                                    (),
+                                    Spawn((Text::new("Show Polygon Mesh"), ThemedText))
+                                ),
+                                observe(set_gizmo(AvailableGizmos::PolyMesh))
+                            )
                         ],
                     ),
                 ]
@@ -342,7 +319,7 @@ fn read_config_inputs(
 }
 
 fn save_navmesh(
-    _: In<Activate>,
+    _: On<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<SaveTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -368,7 +345,7 @@ fn save_navmesh(
 }
 
 fn load_navmesh(
-    _: In<Activate>,
+    _: On<Activate>,
     mut commands: Commands,
     maybe_task: Option<Res<LoadTask>>,
     window_handle: Single<&RawHandleWrapper, With<PrimaryWindow>>,
@@ -527,9 +504,9 @@ fn decimal_option_input(marker: impl Bundle, initial_value: f32) -> impl Bundle 
     )
 }
 
-fn set_gizmo(gizmo: AvailableGizmos) -> impl System<In = In<ValueChange<bool>>, Out = ()> {
-    IntoSystem::into_system(
-        move |val: In<ValueChange<bool>>,
+fn set_gizmo(gizmo: AvailableGizmos) -> impl ObserverSystem<ValueChange<bool>, ()> {
+    IntoObserverSystem::into_system(
+        move |val: On<ValueChange<bool>>,
               mut gizmos: ResMut<GizmosToDraw>,
               mut commands: Commands| {
             if val.value {
