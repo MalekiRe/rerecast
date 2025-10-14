@@ -13,7 +13,7 @@ categories = ["game-development"]
 readme = "readme.md"
 
 [workspace.dependencies]
-avian3d = { version = "0.4.0-dev", git = "https://github.com/Jondolf/avian", branch = "main", default-features = false }
+avian3d = { version = "0.4", default-features = false }
 serde = { version = "1.0.219", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.140", default-features = false, features = [
     "alloc",
@@ -64,7 +64,7 @@ rerecast = { version = "0.2.0", path = "crates/rerecast", default-features = fal
 bevy_rerecast = { version = "0.3.0", path = "crates/bevy_rerecast", default-features = false }
 bevy_rerecast_core = { version = "0.3.0", path = "crates/bevy_rerecast_core", default-features = false }
 bevy_rerecast_editor_integration = { version = "0.3.0", path = "crates/bevy_rerecast_editor_integration", default-features = false }
-avian_rerecast = { version = "0.3.0-rc", path = "crates/avian_rerecast", default-features = false }
+avian_rerecast = { version = "0.3.0", path = "crates/avian_rerecast", default-features = false }
 test_utils = { version = "0.1.0", path = "crates/test_utils", default-features = false }
 
 # Other stuffs
