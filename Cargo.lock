@@ -1173,9 +1173,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_malek_async"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5f8ad96ccc9e01adfedc7b3fa6d8222bf64d77c0354d98388a69c538dfd48d4"
+checksum = "48b3542ea649e1fdf7800a006b8970fc7ce2fbfdc663610aa6f9f91399cd08be"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
